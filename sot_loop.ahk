@@ -85,9 +85,9 @@ RunSession() {
 
     ; ── Guilde ────────────────────────────────────────────────────────────
     Send("{Right}")
-    Sleep(300)
+    Sleep(500)
     Send("{Right}")
-    Sleep(300)
+    Sleep(500)
     Send("{Enter}")
     Sleep(1000)
     Send("{Enter}")
