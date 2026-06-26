@@ -25,14 +25,14 @@ T_AFTER_ENTER_TITLE := 10 ; secondes attente après Enter sur écran titre
 T_POPUP_ESC    := 500    ; entre les deux Escape popup
 
 ; ─── HOTKEYS ──────────────────────────────────────────────────────────────────
-; Ctrl+Alt+F → start loop (depuis menu principal)
-; Ctrl+Alt+O → stop tout
+; Ctrl+Alt+F       → start loop (depuis menu principal)
+; Ctrl+Alt+Shift+Q → stop tout
 
 ~^!f:: {
     StartLoop()
 }
 
-~^!o:: {
+~^+!q:: {
     StopLoop()
 }
 
@@ -49,20 +49,25 @@ StopLoop() {
         ProcessClose(detector_pid)
         detector_pid := 0
     }
+    if FileExist(FLAG_FILE)
+        FileDelete(FLAG_FILE)
     ToolTip("🛑 Loop stoppée")
     SetTimer(() => ToolTip(), -3000)
 }
 
 StartLoop() {
-    global running
+    global running, FLAG_FILE
     if running {
         ToolTip("⚠️ Loop déjà active")
         SetTimer(() => ToolTip(), -2000)
         return
     }
+    ; Nettoyage flag résiduel
+    if FileExist(FLAG_FILE)
+        FileDelete(FLAG_FILE)
     running := true
     StartDetector()
-    ToolTip("🏴‍☠️ Loop démarrée  |  Ctrl+Alt+O pour stop")
+    ToolTip("🏴‍☠️ Loop démarrée  |  Ctrl+Alt+Shift+Q pour stop")
     Loop {
         if !running
             break
