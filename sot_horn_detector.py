@@ -26,7 +26,7 @@ from scipy.io import wavfile
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
 
 DEFAULT_TEMPLATE = "sot_horn_template.wav"
-DEFAULT_THRESHOLD = 0.65       # corrélation normalisée [0-1], ajuster selon faux positifs
+DEFAULT_THRESHOLD = 0.55       # corrélation normalisée [0-1], ajuster selon faux positifs
 BLOCK_SIZE = 4096              # samples par callback
 HOP_SECONDS = 0.5             # fréquence de check (sliding window hop)
 COOLDOWN_SECONDS = 15         # délai min entre deux alertes
@@ -202,7 +202,7 @@ def main():
             # Score combiné: xcorr + spectral similarity
             score_xcorr = normalized_xcorr(window, template)
             score_spec = spectral_similarity(window, template, sr)
-            score = 0.6 * score_xcorr + 0.4 * score_spec
+            score = 0.2 * score_xcorr + 0.8 * score_spec
 
             # Debug (commenter pour moins de verbosité)
             print(f"[{time.strftime('%H:%M:%S')}] xcorr={score_xcorr:.3f}  spec={score_spec:.3f}  combined={score:.3f}")
