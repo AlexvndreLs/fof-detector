@@ -131,7 +131,10 @@ def alert(score: float):
             req = urllib.request.Request(
                 DISCORD_WEBHOOK,
                 data=payload,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "User-Agent": "Mozilla/5.0"
+                },
                 method="POST"
             )
             urllib.request.urlopen(req, timeout=5)
