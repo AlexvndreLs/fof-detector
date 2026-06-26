@@ -7,6 +7,23 @@ PYTHON_PATH   := "C:\miniconda\envs\sot\python.exe"
 FLAG_FILE     := "C:\Users\Alexandre\fof_detector\fort_detected.txt"
 BOAT_TOGGLE   := false
 
+; ─── TIMINGS (ms) ─────────────────────────────────────────────────────────────
+T_CURSOR       := 300    ; entre Q Q E
+T_MENU_NAV     := 1000   ; entre Space jouer/aventure/haute mer
+T_AFTER_HAUTEMER := 2000 ; attente chargement avant sélection guilde
+T_ARROW        := 500    ; entre flèches guilde
+T_AFTER_GUILDE := 1000   ; après Enter guilde
+T_BOAT_ARROW   := 300    ; entre flèches choix bateau
+T_BEFORE_DEPART := 1000  ; avant confirmer départ
+T_AFTER_DEPART := 1000   ; après confirmer départ
+T_GUILDE_OUVERTE := 300  ; entre Down et Enter mode guilde ouvert
+T_AFTER_CONFIRM := 1000  ; après confirmation finale
+T_IN_GAME      := 45     ; secondes d'écoute en jeu
+T_QUIT_ARROW   := 500    ; entre flèches menu quitter
+T_TITLE_SCREEN := 15     ; secondes attente écran titre
+T_AFTER_ENTER_TITLE := 10 ; secondes attente après Enter sur écran titre
+T_POPUP_ESC    := 500    ; entre les deux Escape popup
+
 ; ─── HOTKEYS ──────────────────────────────────────────────────────────────────
 ; Ctrl+Alt+F → start loop (depuis menu principal)
 ; Ctrl+Alt+O → stop tout
@@ -72,66 +89,97 @@ StartDetector() {
     Run(PYTHON_PATH . " " . DETECTOR_PATH, , "Hide", &detector_pid)
 }
 
+WaitChecked(ms) {
+    global running, FLAG_FILE
+    steps := ms // 100
+    loop steps {
+        if !running
+            return false
+        if FileExist(FLAG_FILE)
+            return false
+        Sleep(100)
+    }
+    return true
+}
+
 RunSession() {
     global running, BOAT_TOGGLE
+    global T_CURSOR, T_MENU_NAV, T_AFTER_HAUTEMER, T_ARROW, T_AFTER_GUILDE
+    global T_BOAT_ARROW, T_BEFORE_DEPART, T_AFTER_DEPART, T_GUILDE_OUVERTE
+    global T_AFTER_CONFIRM, T_IN_GAME, T_QUIT_ARROW, T_TITLE_SCREEN
+    global T_AFTER_ENTER_TITLE, T_POPUP_ESC
 
-    ; ── Positionner curseur sur la bonne case ─────────────────────────────
+    ; ── Positionner curseur ────────────────────────────────────────────────
     Send("q")
-    Sleep(300)
+    WaitChecked(T_CURSOR)
     Send("q")
-    Sleep(300)
+    WaitChecked(T_CURSOR)
     Send("e")
-    Sleep(500)
+    WaitChecked(T_CURSOR)
 
-    ; ── Jouer (depuis menu principal) ─────────────────────────────────────
-    Send("{Space}")   ; jouer
-    Sleep(1000)
-    Send("{Space}")   ; aventure
-    Sleep(1000)
-    Send("{Space}")   ; haute mer
-    Sleep(1000)
+    ; ── Jouer → Aventure → Haute Mer ──────────────────────────────────────
+    Send("{Space}")
+    if !WaitChecked(T_MENU_NAV)
+        return
+    Send("{Space}")
+    if !WaitChecked(T_MENU_NAV)
+        return
+    Send("{Space}")
+    if !WaitChecked(T_AFTER_HAUTEMER)
+        return
 
     ; ── Guilde ────────────────────────────────────────────────────────────
-    Sleep(2000)
     Send("{Right}")
-    Sleep(500)
+    if !WaitChecked(T_ARROW)
+        return
     Send("{Right}")
-    Sleep(500)
+    if !WaitChecked(T_ARROW)
+        return
     Send("{Enter}")
-    Sleep(1000)
+    if !WaitChecked(T_AFTER_GUILDE)
+        return
     Send("{Enter}")
-    Sleep(1000)
+    if !WaitChecked(T_AFTER_GUILDE)
+        return
 
     ; ── Choix bateau ──────────────────────────────────────────────────────
     Send("{Up}")
-    Sleep(300)
+    WaitChecked(T_BOAT_ARROW)
     Send("{Left}")
-    Sleep(300)
+    WaitChecked(T_BOAT_ARROW)
     Send("{Left}")
-    Sleep(300)
+    WaitChecked(T_BOAT_ARROW)
 
     if BOAT_TOGGLE {
         Send("{Enter}")
     } else {
         Send("{Right}")
-        Sleep(300)
+        WaitChecked(T_BOAT_ARROW)
         Send("{Enter}")
     }
     BOAT_TOGGLE := !BOAT_TOGGLE
 
-    Sleep(1000)
-    Send("{Up}")      ; positionner avant confirmer départ
-    Sleep(300)
-    Send("{Enter}")   ; confirmer départ
-    Sleep(1000)
-    Send("{Down}")    ; mode guilde ouvert
-    Sleep(300)
+    ; ── Confirmer départ ──────────────────────────────────────────────────
+    if !WaitChecked(T_BEFORE_DEPART)
+        return
+    Send("{Up}")
+    WaitChecked(T_BOAT_ARROW)
     Send("{Enter}")
-    Sleep(1000)
-    Send("{Enter}")   ; confirmation finale
+    if !WaitChecked(T_AFTER_DEPART)
+        return
 
-    ; ── Attendre 45s (chargement + son) ───────────────────────────────────
-    loop 45 {
+    ; ── Mode guilde ouvert ────────────────────────────────────────────────
+    Send("{Down}")
+    WaitChecked(T_GUILDE_OUVERTE)
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_CONFIRM)
+        return
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_CONFIRM)
+        return
+
+    ; ── Attendre en jeu (chargement + écoute son) ─────────────────────────
+    loop T_IN_GAME {
         if !running
             return
         if FileExist(FLAG_FILE)
@@ -139,22 +187,22 @@ RunSession() {
         Sleep(1000)
     }
 
-    ; ── Quitter la partie → retour menu ───────────────────────────────────
+    ; ── Quitter la partie ─────────────────────────────────────────────────
     Send("{Enter}")
-    Sleep(1000)
+    WaitChecked(1000)
     Send("{Escape}")
-    Sleep(1000)
+    WaitChecked(1000)
     Loop 7 {
         Send("{Down}")
-        Sleep(500)
+        WaitChecked(T_QUIT_ARROW)
     }
-    Sleep(300)
+    WaitChecked(300)
     Send("{Enter}")
-    Sleep(1000)
+    WaitChecked(1000)
     Send("{Enter}")
 
-    ; ── Attendre écran titre (15s) ────────────────────────────────────────
-    loop 15 {
+    ; ── Attendre écran titre ──────────────────────────────────────────────
+    loop T_TITLE_SCREEN {
         if !running
             return
         if FileExist(FLAG_FILE)
@@ -162,9 +210,9 @@ RunSession() {
         Sleep(1000)
     }
 
-    ; ── Entrée + attendre 10s ─────────────────────────────────────────────
+    ; ── Enter + attendre ──────────────────────────────────────────────────
     Send("{Enter}")
-    loop 10 {
+    loop T_AFTER_ENTER_TITLE {
         if !running
             return
         if FileExist(FLAG_FILE)
@@ -172,9 +220,9 @@ RunSession() {
         Sleep(1000)
     }
 
-    ; ── Fermer popup écran titre ───────────────────────────────────────────
+    ; ── Fermer popup ──────────────────────────────────────────────────────
     Send("{Escape}")
-    Sleep(500)
+    WaitChecked(T_POPUP_ESC)
     Send("{Escape}")
-    Sleep(1000)
+    WaitChecked(1000)
 }
