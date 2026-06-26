@@ -116,7 +116,7 @@ def main():
                         help="Seuil corrélation [0-1], défaut=0.65")
     parser.add_argument("--list-devices", action="store_true",
                         help="Lister les devices audio et quitter")
-    parser.add_argument("--device", type=int, default=None,
+    parser.add_argument("--device", type=int, default=96,
                         help="Index du device loopback (voir --list-devices)")
     args = parser.parse_args()
 
