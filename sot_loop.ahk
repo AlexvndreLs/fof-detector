@@ -7,22 +7,21 @@ PYTHON_PATH   := "C:\miniconda\envs\sot\python.exe"
 FLAG_FILE     := "C:\Users\Alexandre\fof_detector\fort_detected.txt"
 BOAT_TOGGLE   := false
 
-; ─── HOTKEYS (double/triple appui anti-accident) ──────────────────────────────
-; Ctrl+Shift+F10 → start loop + détecteur
-; Ctrl+Shift+F11 → stop tout
+; ─── HOTKEYS ──────────────────────────────────────────────────────────────────
+; Ctrl+Alt+F → start loop (depuis menu principal)
+; Ctrl+Alt+O → stop tout
 
-~^+F10:: {
+~^!f:: {
     StartLoop()
 }
 
-~^+F11:: {
+~^!o:: {
     StopLoop()
 }
 
 ; ─── STATE ────────────────────────────────────────────────────────────────────
 global running      := false
 global detector_pid := 0
-global ahk_pid      := ProcessExist()  ; PID du script AHK lui-même
 
 ; ─── FONCTIONS ────────────────────────────────────────────────────────────────
 
@@ -45,11 +44,8 @@ StartLoop() {
         return
     }
     running := true
-
-    ; Lancer le détecteur Python en continu dès le début
     StartDetector()
-
-    ToolTip("🏴‍☠️ Loop démarrée  |  Ctrl+Shift+F11 pour stop")
+    ToolTip("🏴‍☠️ Loop démarrée  |  Ctrl+Alt+O pour stop")
     Loop {
         if !running
             break
@@ -67,90 +63,60 @@ StartLoop() {
 
 StartDetector() {
     global detector_pid, PYTHON_PATH, DETECTOR_PATH, FLAG_FILE
-    ; Kill l'ancien si encore en vie
     if detector_pid != 0 {
         ProcessClose(detector_pid)
         detector_pid := 0
     }
     if FileExist(FLAG_FILE)
         FileDelete(FLAG_FILE)
-    ; Lancer en mode infini (sans --listen) - AHK gère le timing
     Run(PYTHON_PATH . " " . DETECTOR_PATH, , "Hide", &detector_pid)
 }
 
 RunSession() {
-    global running, detector_pid, BOAT_TOGGLE
+    global running, BOAT_TOGGLE
 
-    ; ── Quitter la partie ──────────────────────────────────────────────────
-    Send("{Escape}")
-    Sleep(500)
-    Loop 7
-        Send("{Down}")
-    Sleep(200)
-    Send("{Enter}")
-    Sleep(500)
-    Send("{Enter}")
-
-    ; Attendre menu principal (15s) en vérifiant le flag
-    loop 15 {
-        if !running
-            return
-        if FileExist(FLAG_FILE)
-            return
-        Sleep(1000)
-    }
-
-    ; ── Menu principal ─────────────────────────────────────────────────────
-    Send("{Space}")   ; lancer
-    loop 5 {
-        if !running
-            return
-        if FileExist(FLAG_FILE)
-            return
-        Sleep(1000)
-    }
-
+    ; ── Jouer (depuis menu principal) ─────────────────────────────────────
     Send("{Space}")   ; jouer
-    Sleep(300)
+    Sleep(1000)
     Send("{Space}")   ; aventure
-    Sleep(300)
+    Sleep(1000)
     Send("{Space}")   ; haute mer
-    Sleep(300)
+    Sleep(1000)
 
     ; ── Guilde ────────────────────────────────────────────────────────────
     Send("{Right}")
-    Sleep(100)
+    Sleep(300)
     Send("{Right}")
-    Sleep(100)
-    Send("{Enter}")
     Sleep(300)
     Send("{Enter}")
-    Sleep(500)
+    Sleep(1000)
+    Send("{Enter}")
+    Sleep(1000)
 
     ; ── Choix bateau ──────────────────────────────────────────────────────
     Send("{Up}")
-    Sleep(100)
+    Sleep(300)
     Send("{Left}")
-    Sleep(100)
+    Sleep(300)
     Send("{Left}")
-    Sleep(200)
+    Sleep(300)
 
     if BOAT_TOGGLE {
         Send("{Enter}")
     } else {
         Send("{Right}")
-        Sleep(100)
+        Sleep(300)
         Send("{Enter}")
     }
     BOAT_TOGGLE := !BOAT_TOGGLE
 
-    Sleep(300)
+    Sleep(1000)
     Send("{Enter}")   ; confirmer départ
-    Sleep(300)
+    Sleep(1000)
     Send("{Down}")    ; mode guilde ouvert
-    Sleep(100)
-    Send("{Enter}")
     Sleep(300)
+    Send("{Enter}")
+    Sleep(1000)
     Send("{Enter}")   ; confirmation finale
 
     ; ── Attendre 45s (chargement + son) ───────────────────────────────────
@@ -162,5 +128,42 @@ RunSession() {
         Sleep(1000)
     }
 
-    ; Pas de fort → le détecteur Python continue, on relance juste la session
+    ; ── Quitter la partie → retour menu ───────────────────────────────────
+    Send("{Enter}")
+    Sleep(1000)
+    Send("{Escape}")
+    Sleep(1000)
+    Loop 7 {
+        Send("{Down}")
+        Sleep(500)
+    }
+    Sleep(300)
+    Send("{Enter}")
+    Sleep(1000)
+    Send("{Enter}")
+
+    ; ── Attendre écran titre (15s) ────────────────────────────────────────
+    loop 15 {
+        if !running
+            return
+        if FileExist(FLAG_FILE)
+            return
+        Sleep(1000)
+    }
+
+    ; ── Entrée + attendre 10s ─────────────────────────────────────────────
+    Send("{Enter}")
+    loop 10 {
+        if !running
+            return
+        if FileExist(FLAG_FILE)
+            return
+        Sleep(1000)
+    }
+
+    ; ── Fermer popup écran titre ───────────────────────────────────────────
+    Send("{Escape}")
+    Sleep(500)
+    Send("{Escape}")
+    Sleep(1000)
 }
