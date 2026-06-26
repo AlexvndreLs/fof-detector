@@ -205,7 +205,7 @@ def main():
             score = 0.6 * score_xcorr + 0.4 * score_spec
 
             # Debug (commenter pour moins de verbosité)
-            print(f"\r[score] xcorr={score_xcorr:.3f}  spec={score_spec:.3f}  combined={score:.3f}  ", end="", flush=True)
+            print(f"[{time.strftime('%H:%M:%S')}] xcorr={score_xcorr:.3f}  spec={score_spec:.3f}  combined={score:.3f}")
 
             now = time.time()
             if score >= args.threshold and (now - last_alert) > COOLDOWN_SECONDS:
