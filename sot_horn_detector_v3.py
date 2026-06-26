@@ -36,6 +36,12 @@ FLAG_FILE         = Path(__file__).parent / "fort_detected.txt"
 BANDPASS_LOW  = 30
 BANDPASS_HIGH = 200
 
+# ── Discord webhook (laisser vide pour désactiver) ─────────────────────────
+try:
+    from config import DISCORD_WEBHOOK
+except ImportError:
+    DISCORD_WEBHOOK = ""
+
 
 # ─── UTILS ─────────────────────────────────────────────────────────────────────
 
@@ -114,6 +120,23 @@ def alert(score: float):
         winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
     except Exception:
         print("\a")
+
+    # Discord webhook
+    if DISCORD_WEBHOOK:
+        try:
+            import urllib.request, json
+            payload = json.dumps({
+                "content": f"⚓ **FORT DETECTED** | score={score:.3f} | 🏴‍☠️ Go go go !"
+            }).encode()
+            req = urllib.request.Request(
+                DISCORD_WEBHOOK,
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            urllib.request.urlopen(req, timeout=5)
+        except Exception as e:
+            print(f"[discord] erreur: {e}")
 
 
 # ─── MAIN ──────────────────────────────────────────────────────────────────────
