@@ -1,13 +1,16 @@
 """
-Sea of Thieves - Fort Detector v3
-Mode --listen N : écoute N secondes, écrit fort_detected.txt si détecté, puis quitte.
-Intégration AHK pour loop automatique de sessions.
+Sea of Thieves - Fort Detector v4
+MFCC-based matching : plus robuste que cross-corrélation brute.
+- Sliding window MFCC sur le buffer audio
+- Cosine similarity entre MFCC moyen du buffer et MFCC du template
+- Bandpass 30-200Hz en pré-filtre
+- Score combiné MFCC + xcorr pour double validation
 
 Usage standalone:
-    python sot_horn_detector_v3.py
+    python sot_horn_detector_v4.py
 
-Usage depuis AHK (mode listen):
-    python sot_horn_detector_v3.py --listen 45
+Usage depuis AHK:
+    python sot_horn_detector_v4.py --listen 45
 """
 
 import argparse
@@ -22,11 +25,19 @@ import sounddevice as sd
 import soundfile as sf
 from scipy.signal import correlate, resample_poly, butter, sosfilt
 
+try:
+    import librosa
+    HAS_LIBROSA = True
+except ImportError:
+    HAS_LIBROSA = False
+    print("[!] librosa non installé - pip install librosa")
+    print("[!] Fallback sur spectral similarity uniquement")
+
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
 
 DEFAULT_TEMPLATE  = "sot_horn_template.wav"
-DEFAULT_THRESHOLD = 0.58
+DEFAULT_THRESHOLD = 0.60
 DEFAULT_DEVICE    = 96
 BLOCK_SIZE        = 4096
 HOP_SECONDS       = 0.5
@@ -36,7 +47,15 @@ FLAG_FILE         = Path(__file__).parent / "fort_detected.txt"
 BANDPASS_LOW  = 30
 BANDPASS_HIGH = 200
 
-# ── Discord webhook (laisser vide pour désactiver) ─────────────────────────
+N_MFCC    = 20
+N_FFT     = 2048
+HOP_MFCC  = 512
+
+# Poids score final
+W_MFCC  = 0.7
+W_XCORR = 0.3
+
+# Discord webhook
 try:
     from config import DISCORD_WEBHOOK
 except ImportError:
@@ -67,6 +86,20 @@ def load_template(path: str, target_sr: int) -> np.ndarray:
     return y
 
 
+def compute_mfcc_mean(y: np.ndarray, sr: int) -> np.ndarray:
+    """MFCC moyenné sur le temps → vecteur de N_MFCC dims."""
+    mfcc = librosa.feature.mfcc(
+        y=y.astype(np.float32), sr=sr,
+        n_mfcc=N_MFCC, n_fft=N_FFT, hop_length=HOP_MFCC
+    )
+    return mfcc.mean(axis=1)
+
+
+def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
+    norm = (np.linalg.norm(a) * np.linalg.norm(b)) + 1e-9
+    return float(np.dot(a, b) / norm)
+
+
 def normalized_xcorr(a: np.ndarray, b: np.ndarray) -> float:
     if len(a) < len(b):
         return 0.0
@@ -76,16 +109,6 @@ def normalized_xcorr(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.max(np.abs(corr)) / norm)
 
 
-def spectral_similarity(a: np.ndarray, b: np.ndarray) -> float:
-    n = min(len(a), len(b))
-    if n < 512:
-        return 0.0
-    fa = np.abs(np.fft.rfft(a[-n:], n=n))
-    fb = np.abs(np.fft.rfft(b[:n], n=n))
-    norm = (np.linalg.norm(fa) * np.linalg.norm(fb)) + 1e-9
-    return float(np.dot(fa, fb) / norm)
-
-
 # ─── ALERTE ────────────────────────────────────────────────────────────────────
 
 def alert(score: float):
@@ -93,7 +116,6 @@ def alert(score: float):
     print(f"  ⚓  FORT DETECTED  |  score={score:.3f}")
     print(f"{'=' * 50}\n")
 
-    # Écrire le flag file pour AHK
     FLAG_FILE.write_text("detected")
 
     try:
@@ -121,7 +143,6 @@ def alert(score: float):
     except Exception:
         print("\a")
 
-    # Discord webhook
     if DISCORD_WEBHOOK:
         try:
             import urllib.request, json
@@ -145,12 +166,11 @@ def alert(score: float):
 # ─── MAIN ──────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="SoT Horn Detector v3")
+    parser = argparse.ArgumentParser(description="SoT Horn Detector v4 - MFCC")
     parser.add_argument("--template",  default=DEFAULT_TEMPLATE)
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
     parser.add_argument("--device",    type=int,   default=DEFAULT_DEVICE)
-    parser.add_argument("--listen",    type=int,   default=0,
-                        help="Durée d'écoute en secondes puis quitte (0=infini)")
+    parser.add_argument("--listen",    type=int,   default=0)
     parser.add_argument("--list-devices", action="store_true")
     args = parser.parse_args()
 
@@ -174,14 +194,23 @@ def main():
         sys.exit(1)
 
     template_raw = load_template(str(template_path), sr)
-    template = apply_bandpass(template_raw, sos)
-    template /= np.max(np.abs(template)) + 1e-9
-    print(f"[*] Template: {len(template)/sr:.2f}s  |  Seuil: {args.threshold}")
+    template_bp  = apply_bandpass(template_raw, sos)
+    template_bp /= np.max(np.abs(template_bp)) + 1e-9
+
+    # Pré-calculer MFCC du template
+    if HAS_LIBROSA:
+        template_mfcc = compute_mfcc_mean(template_bp, sr)
+        print(f"[*] MFCC template calculé ({N_MFCC} coefficients)")
+    else:
+        template_mfcc = None
+
+    print(f"[*] Template: {len(template_bp)/sr:.2f}s  |  Seuil: {args.threshold}")
+    print(f"[*] Poids: MFCC={W_MFCC} xcorr={W_XCORR}")
     if args.listen:
         print(f"[*] Mode listen: {args.listen}s")
     print(f"[*] Écoute en cours... (Ctrl+C pour quitter)\n")
 
-    buf_len = len(template) * 3
+    buf_len = len(template_bp) * 3
     buf = np.zeros(buf_len, dtype=np.float32)
     buf_lock = threading.Lock()
     audio_q = queue.Queue()
@@ -219,11 +248,19 @@ def main():
             window_bp = apply_bandpass(window, sos)
             window_bp /= np.max(np.abs(window_bp)) + 1e-9
 
-            score_xcorr = normalized_xcorr(window_bp, template)
-            score_spec  = spectral_similarity(window_bp, template)
-            score = 0.2 * score_xcorr + 0.8 * score_spec
+            # MFCC similarity
+            if HAS_LIBROSA and template_mfcc is not None:
+                win_mfcc  = compute_mfcc_mean(window_bp[-len(template_bp):], sr)
+                score_mfcc = max(0.0, cosine_similarity(win_mfcc, template_mfcc))
+            else:
+                score_mfcc = 0.0
 
-            print(f"[{time.strftime('%H:%M:%S')}] xcorr={score_xcorr:.3f}  spec={score_spec:.3f}  combined={score:.3f}")
+            # xcorr
+            score_xcorr = normalized_xcorr(window_bp, template_bp)
+
+            score = W_MFCC * score_mfcc + W_XCORR * score_xcorr
+
+            print(f"[{time.strftime('%H:%M:%S')}] mfcc={score_mfcc:.3f}  xcorr={score_xcorr:.3f}  combined={score:.3f}")
 
             now = time.time()
             if score >= args.threshold and (now - last_alert) > COOLDOWN_SECONDS:

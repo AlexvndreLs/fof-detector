@@ -10,7 +10,7 @@ BOAT_TOGGLE   := false
 ; ─── TIMINGS (ms) ─────────────────────────────────────────────────────────────
 T_CURSOR       := 500    ; entre Q Q E
 T_MENU_NAV     := 1000   ; entre Enter jouer/aventure/haute mer
-T_AFTER_HAUTEMER := 10000 ; attente chargement avant sélection guilde
+T_AFTER_HAUTEMER := 5000 ; attente chargement avant sélection guilde
 T_ARROW        := 500    ; entre flèches guilde
 T_AFTER_GUILDE := 1000   ; après Enter guilde
 T_BOAT_ARROW   := 500    ; entre flèches choix bateau
@@ -45,14 +45,16 @@ global detector_pid := 0
 StopLoop() {
     global running, detector_pid
     running := false
+    ; Attendre que Python envoie le webhook Discord avant de le kill
+    Sleep(3000)
     if detector_pid != 0 {
         ProcessClose(detector_pid)
         detector_pid := 0
     }
     if FileExist(FLAG_FILE)
         FileDelete(FLAG_FILE)
-    ToolTip("🛑 Loop stoppée")
-    SetTimer(() => ToolTip(), -3000)
+    ToolTip("🛑 Loop stoppée à " . FormatTime(, "HH:mm:ss"))
+    SetTimer(() => ToolTip(), -5000)
 }
 
 StartLoop() {
@@ -66,7 +68,6 @@ StartLoop() {
     if FileExist(FLAG_FILE)
         FileDelete(FLAG_FILE)
     running := true
-    StartDetector()
     ToolTip("🏴‍☠️ Loop démarrée  |  Ctrl+Alt+Shift+Q pour stop")
     Loop {
         if !running
@@ -91,7 +92,7 @@ StartDetector() {
     }
     if FileExist(FLAG_FILE)
         FileDelete(FLAG_FILE)
-    Run(PYTHON_PATH . " " . DETECTOR_PATH, , "Hide", &detector_pid)
+    Run(PYTHON_PATH . " " . DETECTOR_PATH . " --delay 10", , "Hide", &detector_pid)
 }
 
 WaitChecked(ms) {
@@ -190,6 +191,9 @@ RunSession() {
     if !WaitChecked(T_AFTER_CONFIRM)
         return
 
+    ; ── Lancer détecteur Python juste avant d'écouter ─────────────────────
+    StartDetector()
+
     ; ── Attendre en jeu (chargement + écoute son) ─────────────────────────
     loop T_IN_GAME {
         if !running
@@ -199,9 +203,13 @@ RunSession() {
         Sleep(1000)
     }
 
+    ; ── Kill détecteur si pas de fort ─────────────────────────────────────
+    if detector_pid != 0 {
+        ProcessClose(detector_pid)
+        detector_pid := 0
+    }
+
     ; ── Quitter la partie ─────────────────────────────────────────────────
-    Send("{Enter}")
-    WaitChecked(1000)
     Send("{Escape}")
     WaitChecked(1000)
     Loop 7 {
