@@ -92,6 +92,7 @@ RunSession() {
     Sleep(1000)
 
     ; ── Guilde ────────────────────────────────────────────────────────────
+    Sleep(2000)
     Send("{Right}")
     Sleep(500)
     Send("{Right}")
@@ -119,6 +120,8 @@ RunSession() {
     BOAT_TOGGLE := !BOAT_TOGGLE
 
     Sleep(1000)
+    Send("{Up}")      ; positionner avant confirmer départ
+    Sleep(300)
     Send("{Enter}")   ; confirmer départ
     Sleep(1000)
     Send("{Down}")    ; mode guilde ouvert
