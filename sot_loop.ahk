@@ -8,15 +8,15 @@ FLAG_FILE     := "C:\Users\Alexandre\fof_detector\fort_detected.txt"
 BOAT_TOGGLE   := false
 
 ; ─── TIMINGS (ms) ─────────────────────────────────────────────────────────────
-T_CURSOR       := 300    ; entre Q Q E
-T_MENU_NAV     := 1000   ; entre Space jouer/aventure/haute mer
-T_AFTER_HAUTEMER := 2000 ; attente chargement avant sélection guilde
+T_CURSOR       := 500    ; entre Q Q E
+T_MENU_NAV     := 1000   ; entre Enter jouer/aventure/haute mer
+T_AFTER_HAUTEMER := 10000 ; attente chargement avant sélection guilde
 T_ARROW        := 500    ; entre flèches guilde
 T_AFTER_GUILDE := 1000   ; après Enter guilde
-T_BOAT_ARROW   := 300    ; entre flèches choix bateau
+T_BOAT_ARROW   := 500    ; entre flèches choix bateau
 T_BEFORE_DEPART := 1000  ; avant confirmer départ
 T_AFTER_DEPART := 1000   ; après confirmer départ
-T_GUILDE_OUVERTE := 300  ; entre Down et Enter mode guilde ouvert
+T_GUILDE_OUVERTE := 500  ; entre Down et Enter mode guilde ouvert
 T_AFTER_CONFIRM := 1000  ; après confirmation finale
 T_IN_GAME      := 45     ; secondes d'écoute en jeu
 T_QUIT_ARROW   := 500    ; entre flèches menu quitter
@@ -118,13 +118,13 @@ RunSession() {
     WaitChecked(T_CURSOR)
 
     ; ── Jouer → Aventure → Haute Mer ──────────────────────────────────────
-    Send("{Space}")
+    Send("{Enter}")
     if !WaitChecked(T_MENU_NAV)
         return
-    Send("{Space}")
+    Send("{Enter}")
     if !WaitChecked(T_MENU_NAV)
         return
-    Send("{Space}")
+    Send("{Enter}")
     if !WaitChecked(T_AFTER_HAUTEMER)
         return
 
@@ -173,6 +173,13 @@ RunSession() {
     WaitChecked(T_GUILDE_OUVERTE)
     Send("{Enter}")
     if !WaitChecked(T_AFTER_CONFIRM)
+        return
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_CONFIRM)
+        return
+
+    ; ── Confirmation avant chargement ─────────────────────────────────────
+    if !WaitChecked(2500)
         return
     Send("{Enter}")
     if !WaitChecked(T_AFTER_CONFIRM)
