@@ -75,6 +75,14 @@ StartDetector() {
 RunSession() {
     global running, BOAT_TOGGLE
 
+    ; ── Positionner curseur sur la bonne case ─────────────────────────────
+    Send("q")
+    Sleep(300)
+    Send("q")
+    Sleep(300)
+    Send("e")
+    Sleep(500)
+
     ; ── Jouer (depuis menu principal) ─────────────────────────────────────
     Send("{Space}")   ; jouer
     Sleep(1000)
