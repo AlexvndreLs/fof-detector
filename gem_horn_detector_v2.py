@@ -1,11 +1,3 @@
-"""
-Sea of Thieves - Fort Detector v2
-Bandpass filter sur la bande du klaxon avant cross-correlation -> robuste au bruit de fond
-
-Usage:
-    python sot_horn_detector_v2.py [--threshold 0.65] [--device 96]
-"""
-
 import argparse
 import time
 import threading
@@ -19,29 +11,29 @@ import soundfile as sf
 from scipy.signal import correlate, resample_poly, butter, sosfilt
 
 
-# ─── CONFIG ────────────────────────────────────────────────────────────────────
+# ─── CONFIGURATION ─────────────────────────────────────────────────────────────
 
 DEFAULT_TEMPLATE = "sot_horn_template.wav"
-DEFAULT_THRESHOLD = 0.5
-DEFAULT_DEVICE = 96
+
+# Updated calibration parameters derived from your 2-second template log
+STRICT_SPEC_THRESHOLD = 0.65   # Captures the clear plateau (>0.75) from 23:30:52 to 23:30:57
+STRICT_XCORR_THRESHOLD = 0.16  # Validates the time-domain envelope peak (hit 0.191)
+NOISE_GATE_RMS = 0.05         # Continues to block low-energy background static
+
 BLOCK_SIZE = 4096
-HOP_SECONDS = 0.5
-COOLDOWN_SECONDS = 15
-
-# Bande fréquentielle du klaxon SOT (Hz)
-BANDPASS_LOW = 30
-BANDPASS_HIGH = 200
+HOP_SECONDS = 0.3              # Faster analysis window for precise capture
+COOLDOWN_SECONDS = 3
 
 
-# ─── UTILS ─────────────────────────────────────────────────────────────────────
+# ─── SIGNAL PROCESSING UTILITIES ───────────────────────────────────────────────
 
-def butter_bandpass(low, high, sr, order=4):
+def butter_bandpass(low: float, high: float, sr: int, order: int = 4) -> np.ndarray:
     nyq = sr / 2
     sos = butter(order, [low / nyq, high / nyq], btype="band", output="sos")
     return sos
 
 
-def apply_bandpass(y, sos):
+def apply_bandpass(y: np.ndarray, sos: np.ndarray) -> np.ndarray:
     return sosfilt(sos, y).astype(np.float32)
 
 
@@ -76,12 +68,12 @@ def spectral_similarity(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(fa, fb) / norm)
 
 
-# ─── ALERTE ────────────────────────────────────────────────────────────────────
+# ─── NOTIFICATION SYSTEM ───────────────────────────────────────────────────────
 
-def alert(score: float):
-    print(f"\n{'=' * 50}")
-    print(f"  ⚓  FORT DETECTED  |  score={score:.3f}")
-    print(f"{'=' * 50}\n")
+def alert(spec_score: float, rms_force: float, strength_label: str):
+    print(f"\n{'=' * 60}")
+    print(f"  ⚓  MATCH CONFIRMED | Quality: {spec_score:.3f} | Strength: {strength_label} (RMS: {rms_force:.4f})")
+    print(f"{'=' * 60}\n")
 
     try:
         import subprocess
@@ -90,7 +82,7 @@ def alert(score: float):
             "$template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent("
             "[Windows.UI.Notifications.ToastTemplateType]::ToastText02);"
             "$template.SelectSingleNode('//text[@id=1]').InnerText = 'Sea of Thieves';"
-            "$template.SelectSingleNode('//text[@id=2]').InnerText = 'FORT DETECTED ! 🏴‍☠️';"
+            f"$template.SelectSingleNode('//text[@id=2]').InnerText = 'FORT DETECTED ({strength_label}) ! 🏴‍☠️';"
             "$notif = [Windows.UI.Notifications.ToastNotification]::new($template);"
             "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('SoT Horn Detector').Show($notif);"
         )
@@ -109,45 +101,34 @@ def alert(score: float):
         print("\a")
 
 
-# ─── MAIN ──────────────────────────────────────────────────────────────────────
+# ─── CORE DETECTION ENGINE ─────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="SoT Horn Detector v2 - bandpass")
+    parser = argparse.ArgumentParser(description="Zero False-Positive SoT Detector")
     parser.add_argument("--template", default=DEFAULT_TEMPLATE)
-    parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
-    parser.add_argument("--device", type=int, default=DEFAULT_DEVICE)
-    parser.add_argument("--low", type=float, default=30, help="Bandpass low Hz")
-    parser.add_argument("--high", type=float, default=200, help="Bandpass high Hz")
-    parser.add_argument("--list-devices", action="store_true")
+    parser.add_argument("--device", type=int, default=96)
+    parser.add_argument("--low", type=float, default=40, help="Bandpass low cut")
+    parser.add_argument("--high", type=float, default=250, help="Bandpass high cut")
     args = parser.parse_args()
-
-    if args.list_devices:
-        print(sd.query_devices())
-        sys.exit(0)
 
     device_info = sd.query_devices(args.device, "input")
     sr = int(device_info["default_samplerate"])
-    print(f"[*] Device: [{args.device}] {device_info['name']}")
-    print(f"[*] Sample rate: {sr} Hz")
-
-    # Bandpass filter
+    
     sos = butter_bandpass(args.low, args.high, sr)
-    print(f"[*] Bandpass: {args.low}-{args.high} Hz")
-
-    # Template
+    
     template_path = Path(args.template)
     if not template_path.exists():
         template_path = Path(__file__).parent / args.template
     if not template_path.exists():
-        print(f"[!] Template introuvable: {args.template}")
+        print(f"[!] Template missing: {args.template}")
         sys.exit(1)
 
     template_raw = load_template(str(template_path), sr)
     template = apply_bandpass(template_raw, sos)
     template /= np.max(np.abs(template)) + 1e-9
-    print(f"[*] Template chargé: {len(template)/sr:.2f}s")
-    print(f"[*] Seuil: {args.threshold}")
-    print(f"[*] Écoute en cours... (Ctrl+C pour quitter)\n")
+
+    print(f"[*] Engine online. Noise Gate active context: RMS > {NOISE_GATE_RMS}")
+    print(f"[*] Listening on device [{args.device}]...")
 
     buf_len = len(template) * 3
     buf = np.zeros(buf_len, dtype=np.float32)
@@ -156,8 +137,6 @@ def main():
     last_alert = 0.0
 
     def callback(indata, frames, time_info, status):
-        if status:
-            print(f"[warn] {status}")
         audio_q.put(indata.mean(axis=1).copy())
 
     def detector_loop():
@@ -183,37 +162,49 @@ def main():
             with buf_lock:
                 window = buf.copy()
 
-            # Appliquer bandpass sur la fenêtre
+            # 1. Evaluate signal amplitude before processing (Noise Gate)
+            analysis_window = window[-len(template):]
+            raw_rms = np.sqrt(np.mean(analysis_window ** 2))
+            
+            if raw_rms < NOISE_GATE_RMS:
+                # The stream is too quiet; skip processing completely to prevent false positives
+                continue
+
+            # 2. Filter and isolate the target band
             window_bp = apply_bandpass(window, sos)
-            window_bp /= np.max(np.abs(window_bp)) + 1e-9
-
-            score_xcorr = normalized_xcorr(window_bp, template)
+            
+            # 3. Structural & Spectral similarity metrics
             score_spec = spectral_similarity(window_bp, template)
-            score = 0.2 * score_xcorr + 0.8 * score_spec
+            score_xcorr = normalized_xcorr(window_bp, template)
 
-            print(f"[{time.strftime('%H:%M:%S')}] xcorr={score_xcorr:.3f}  spec={score_spec:.3f}  combined={score:.3f}")
+            # Debug logs to observe live environmental changes
+            print(f"[{time.strftime('%H:%M:%S')}] RMS={raw_rms:.5f} | Spec={score_spec:.3f} | XCorr={score_xcorr:.3f}")
 
-            now = time.time()
-            if score >= args.threshold and (now - last_alert) > COOLDOWN_SECONDS:
-                last_alert = now
-                alert(score)
+            # 4. Strict Validation Logic (Both parameters must clear their respective limits)
+            if score_spec >= STRICT_SPEC_THRESHOLD and score_xcorr >= STRICT_XCORR_THRESHOLD:
+                now = time.time()
+                if (now - last_alert) > COOLDOWN_SECONDS:
+                    last_alert = now
+                    
+                    # Determine signal strength dynamically
+                    if raw_rms > 0.15:
+                        strength = "CRITICAL / VERY LOUD"
+                    elif raw_rms > 0.05:
+                        strength = "DISTINCT / MEDIUM"
+                    else:
+                        strength = "FAINT / DISTANT"
+                        
+                    alert(score_spec, raw_rms, strength)
 
     t = threading.Thread(target=detector_loop, daemon=True)
     t.start()
 
     try:
-        with sd.InputStream(
-            device=args.device,
-            channels=1,
-            samplerate=sr,
-            blocksize=BLOCK_SIZE,
-            dtype="float32",
-            callback=callback,
-        ):
+        with sd.InputStream(device=args.device, channels=2, samplerate=sr, blocksize=BLOCK_SIZE, dtype="float32", callback=callback):
             while True:
                 time.sleep(0.1)
     except KeyboardInterrupt:
-        print("\n[*] Arrêt.")
+        print("\n[*] Offline.")
 
 
 if __name__ == "__main__":
