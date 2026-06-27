@@ -1,14 +1,15 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
-; ─── CONFIGURATION DE CHEMINS (Ajuste si nécessaire) ─────────────────────────
+; ─── CONFIGURATION DE CHEMINS ─────────────────────────────────────────────────
 DETECTOR_PATH := "C:\Users\Alexandre\fof_detector\test.py"
 PYTHON_PATH   := "C:\miniconda\envs\sot\python.exe"
 FLAG_FILE     := "C:\Users\Alexandre\fof_detector\fort_detected.txt"
 BOAT_TOGGLE   := false
 
 ; ─── CONFIGURATION MODE TEST (DIAGNOSTIC) ─────────────────────────────────────
-TEST_MODE     := False   ; true = Mode test AHK uniquement, false = Mode réel
+TEST_MODE     := false   ; true  = Mode test AHK uniquement (aucun lancement de Python, attente courte en jeu)
+                        ; false = Mode réel (lance Python en tâche de fond, arrête dès qu'un fort est détecté)
 
 ; ─── TIMINGS INTER-SAISIES (ms) ────────────────────────────────────────────────
 T_CURSOR         := 500    ; entre Q Q E
@@ -21,13 +22,13 @@ T_BEFORE_DEPART  := 1000   ; avant confirmer départ
 T_AFTER_DEPART   := 1000   ; après confirmer départ
 T_GUILDE_OUVERTE := 500    ; entre Down et Enter mode guilde ouvert
 T_AFTER_CONFIRM  := 1000   ; après confirmation finale
-T_IN_GAME        := 35     ; Secondes d'écoute à la taverne
+T_IN_GAME        := 25     ; secondes d'écoute en jeu (en mode réel)
 T_QUIT_ARROW     := 500    ; entre flèches menu quitter
 T_TITLE_SCREEN   := 15     ; secondes attente écran titre
 T_AFTER_ENTER_TITLE := 10  ; secondes attente après Enter sur écran titre
 T_POPUP_ESC      := 500    ; entre les deux Escape popup
 
-; ─── RACCOURCIS CLAVIER D'ORIGINE ─────────────────────────────────────────────
+; ─── RACCOURCIS CLAVIER ────────────────────────────────────────────────────────
 ^+f:: {
     StartLoop()
 }
@@ -42,68 +43,39 @@ global detector_pid := 0
 
 ; ─── ACTIONS PRINCIPALES ──────────────────────────────────────────────────────
 
-StartDetector() {
-    global detector_pid, PYTHON_PATH, DETECTOR_PATH, FLAG_FILE, TEST_MODE
-    
-    if TEST_MODE
-        return
-        
-    ; Protection : on nettoie les restes s'il y en a
-    if detector_pid != 0 {
-        try ProcessClose(detector_pid)
-        detector_pid := 0
-    }
-    
-    if FileExist(FLAG_FILE)
-        try FileDelete(FLAG_FILE)
-        
-    ; Commande pour lancer Python en arrière-plan masqué ("Hide")
-    cmd := PYTHON_PATH . " " . DETECTOR_PATH
-    Run(cmd, , "Hide", &detector_pid)
-    
-    ToolTip("🚀 Moteur Python lancé en arrière-plan (PID: " . detector_pid . ")")
-    SetTimer(() => ToolTip(), -3000)
-}
-
 StopLoop() {
     global running, detector_pid
     running := false
     
-    ; On laisse un petit battement puis on coupe proprement le processus Python
     Sleep(1000)
-    if detector_pid != 0 {
-        try {
-            ProcessClose(detector_pid)
-        }
-        detector_pid := 0
+    try {
+        Run("taskkill /F /IM python.exe", , "Hide")
     }
+    detector_pid := 0
     
     if FileExist(FLAG_FILE)
         try FileDelete(FLAG_FILE)
         
-    ToolTip("🛑 Macro et Python COMPLÈTEMENT FERMÉS")
+    ToolTip("🛑 Macro COMPLÈTEMENT FERMÉE à " . FormatTime(, "HH:mm:ss"))
     SetTimer(() => ToolTip(), -5000)
     
     ExitApp
 }
 
 StartLoop() {
-    global running, FLAG_FILE, TEST_MODE
+    global running, FLAG_FILE
     if running {
         ToolTip("⚠️ Boucle déjà active")
         SetTimer(() => ToolTip(), -2000)
         return
     }
     
-    running := true
-    
-    ; Lancement AUTOMATIQUE de Python au tout début du script (une seule fois !)
-    if !TEST_MODE {
-        StartDetector()
-        Sleep(1500) ; Laisse le temps à Python de charger le template audio
+    if FileExist(FLAG_FILE) {
+        try FileDelete(FLAG_FILE)
     }
-    
-    ToolTip("🏴‍☠️ Boucle lancée | Ctrl+Shift+Q pour tout couper")
+        
+    running := true
+    ToolTip("🏴‍☠️ Boucle de serveurs lancée | Ctrl+Shift+Q pour quitter")
     
     Loop {
         if !running
@@ -120,6 +92,26 @@ StartLoop() {
     }
 }
 
+StartDetector() {
+    global detector_pid, PYTHON_PATH, DETECTOR_PATH, FLAG_FILE, TEST_MODE
+    
+    if TEST_MODE {
+        return
+    }
+    
+    try {
+        Run("taskkill /F /IM python.exe", , "Hide")
+    }
+    Sleep(500)
+    
+    if FileExist(FLAG_FILE) {
+        try FileDelete(FLAG_FILE)
+    }
+        
+    cmd := PYTHON_PATH . " " . DETECTOR_PATH . " --listen 45"
+    Run(cmd, , "Hide", &detector_pid)
+}
+
 WaitChecked(ms) {
     global running, FLAG_FILE
     steps := ms // 100
@@ -134,7 +126,7 @@ WaitChecked(ms) {
 }
 
 RunSession() {
-    global running, BOAT_TOGGLE, TEST_MODE
+    global running, BOAT_TOGGLE, detector_pid, TEST_MODE
     global T_CURSOR, T_MENU_NAV, T_AFTER_HAUTEMER, T_ARROW, T_AFTER_GUILDE
     global T_BOAT_ARROW, T_BEFORE_DEPART, T_AFTER_DEPART, T_GUILDE_OUVERTE
     global T_AFTER_CONFIRM, T_IN_GAME, T_QUIT_ARROW, T_TITLE_SCREEN
@@ -216,17 +208,14 @@ RunSession() {
     if !WaitChecked(T_AFTER_CONFIRM)
         return
 
-    ; ── Attente de l'arrivée en jeu et réveil du détecteur ─────────────────
+    ; ── Lancement de l'écoute du signal (Uniquement si hors Mode Test) ───
     if !TEST_MODE {
-        ToolTip("⚓ Arrivée Taverne : Réveil du détecteur (F10)...")
-        Send("{F10}")
-        WaitChecked(500)
-        ToolTip()
+        StartDetector()
     } else {
-        ToolTip("🧪 TEST MACRO : Simulation en jeu (10s)...")
+        ToolTip("🧪 TEST MACRO : Pas de Python. Simulation en jeu (10s)...")
     }
 
-    ; ── Fenêtre d'écoute en jeu (25 secondes) ──────────────────────────────
+    ; ── Attente de l'arrivée de la session de jeu ────────────────────────
     wait_time := TEST_MODE ? 10 : T_IN_GAME
     loop wait_time {
         if !running
@@ -236,17 +225,45 @@ RunSession() {
         Sleep(1000)
     }
 
-
     if TEST_MODE {
         ToolTip("🏴‍☠️ Boucle de serveurs lancée | Ctrl+Shift+Q pour quitter")
     }
 
-    
-    ; ── Sortie de session (MODIFIÉE AVEC TON INPUT PHYSIQUE 200MS) ─────────
-    if !WaitChecked(1000)
+    ; ── NETTOYAGE RADICAL DE PYTHON (PLUS D'ÉCOUTE APPRÈS LA TAVERNE) ─────
+    if !TEST_MODE {
+        try {
+            Run("taskkill /F /IM python.exe", , "Hide")
+        }
+        detector_pid := 0
+    }
+
+    ; ── MOUVEMENTS PHYSIQUES DE SORTIE DE SESSION ─────────────────────────
+    if !WaitChecked(500)
         return
 
-    ; Appui physique sur Echap (Down), maintien pendant 200ms, puis relâchement (Up)
+    ; 1. Avancer pendant 300ms
+    Send("{z Down}")
+    Sleep(300)
+    Send("{z Up}")
+    if !WaitChecked(200)
+        return
+
+    ; 2. Reculer pendant 300ms
+    Send("{s Down}")
+    Sleep(300)
+    Send("{s Up}")
+    if !WaitChecked(200)
+        return
+
+    ; 3. Tourner la caméra à droite de manière fluide (Simule la souris)
+    Loop 20 {
+        DllCall("mouse_event", "UInt", 0x0001, "Int", 30, "Int", 0, "UInt", 0, "UInt", 0)
+        Sleep(15)
+    }
+    if !WaitChecked(500)
+        return
+
+    ; ── OUVERTURE DU MENU DE PAUSE STANDARD ───────────────────────────────
     Send("{Escape}")
 
     if !WaitChecked(3000)

@@ -1,7 +1,7 @@
 """
-Sea of Thieves - Anti-False Positive Horn Detector
-Combinaison de l'enveloppe de Hilbert (temporel) et de la similarité spectrale (FFT)
-Filtrage large 30Hz - 450Hz basé sur tes pics essentiels.
+Sea of Thieves - Anti-False Positive Horn Detector (Version Sans Filtre)
+Combinaison directe de l'enveloppe de Hilbert (temporel) et de la similarité spectrale (FFT).
+Analyse sur l'ensemble du spectre audio brut sans filtrage de Butterworth.
 """
 
 import argparse
@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
-from scipy.signal import correlate, resample_poly, hilbert, butter, sosfilt
+from scipy.signal import correlate, resample_poly, hilbert
 
 # ─── CONFIGURATION DISCORD VIA CONFIG.PY ──────────────────────────────────────
 try:
@@ -27,31 +27,20 @@ except ImportError:
 # ─── CONFIGURATION DES SEUILS AJUSTÉS ──────────────────────────────────────────
 DEFAULT_TEMPLATE = "sot_horn_template.wav"
 
-BANDPASS_LOW: float = 35.0
-BANDPASS_HIGH: float = 450.0 #ou 450
-
 # Sécurité double clé
-STRICT_XCORR_THRESHOLD: float = 0.7  # Seuil enveloppe temporelle (Hilbert)
-STRICT_SPEC_THRESHOLD: float = 0.65   # NOUVEAU : Seuil spectral (Tue l'écran de chargement)
+STRICT_XCORR_THRESHOLD: float = 0.7   # Seuil enveloppe temporelle (Hilbert)
+STRICT_SPEC_THRESHOLD: float = 0.65   # Seuil spectral (FFT)
 
 NOISE_GATE_RMS: float = 0.002
-BLOCK_SIZE: int = 96000
+BLOCK_SIZE: int = 4096                 # Optimisé pour éviter la latence de capture
 HOP_SECONDS: float = 0.4
 COOLDOWN_SECONDS: int = 15
 
 
 # ─── TRAITEMENT DU SIGNAL ──────────────────────────────────────────────────────
 
-def butter_bandpass(low: float, high: float, sr: int, order: int = 4) -> np.ndarray:
-    nyq = sr / 2
-    return butter(order, [low / nyq, high / nyq], btype="band", output="sos")
-
-
-def apply_bandpass(y: np.ndarray, sos: np.ndarray) -> np.ndarray:
-    return sosfilt(sos, y).astype(np.float32)
-
-
 def get_envelope(signal: np.ndarray) -> np.ndarray:
+    """Extrait l'enveloppe d'amplitude lissée via la transformée de Hilbert."""
     if len(signal) == 0 or np.all(signal == 0):
         return np.zeros_like(signal)
     analytic_signal = hilbert(signal)
@@ -67,7 +56,7 @@ def get_envelope(signal: np.ndarray) -> np.ndarray:
 
 
 def spectral_similarity(a: np.ndarray, b: np.ndarray) -> float:
-    """Calcule la similarité cosinus des spectres de magnitude."""
+    """Calcule la similarité cosinus des spectres de magnitude brute."""
     n = min(len(a), len(b))
     if n < 512:
         return 0.0
@@ -77,7 +66,8 @@ def spectral_similarity(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(fa, fb) / norm)
 
 
-def load_template(path: str, target_sr: int, sos: np.ndarray):
+def load_template(path: str, target_sr: int):
+    """Charge le template brut et extrait son enveloppe de référence."""
     y, sr = sf.read(path, dtype="float32", always_2d=False)
     if y.ndim > 1:
         y = y.mean(axis=1)
@@ -86,9 +76,8 @@ def load_template(path: str, target_sr: int, sos: np.ndarray):
         g = gcd(target_sr, sr)
         y = resample_poly(y, target_sr // g, sr // g).astype(np.float32)
     
-    y_filtered = apply_bandpass(y, sos)
-    # On renvoie le signal filtré (pour la FFT) et son enveloppe (pour Hilbert)
-    return y_filtered, get_envelope(y_filtered)
+    # Renvoyer le signal brut rééchantillonné et son enveloppe
+    return y, get_envelope(y)
 
 
 # ─── PIPELINE D'ALERTE ─────────────────────────────────────────────────────────
@@ -102,7 +91,7 @@ def alert(xcorr_score: float, spec_score: float, rms_force: float, strength_labe
         return
 
     payload = {
-        "content": f"🏴‍☠️ **[Anti-Load Engine] FORT DETECTED !**\n"
+        "content": f"🏴‍☠️ **[No-Filter Engine] FORT DETECTED !**\n"
                    f"• **Force du signal** : `{strength_label}` (RMS: {rms_force:.4f})\n"
                    f"• **Similarité d'enveloppe** : `{xcorr_score:.3f}`\n"
                    f"• **Identité fréquentielle** : `{spec_score:.3f}`"
@@ -122,23 +111,22 @@ def alert(xcorr_score: float, spec_score: float, rms_force: float, strength_labe
 # ─── CORE ENGINE ───────────────────────────────────────────────────────────────
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="SoT Horn Detector - Anti-Load Mode")
+    parser = argparse.ArgumentParser(description="SoT Horn Detector - No-Filter Mode")
     parser.add_argument("--template", default=DEFAULT_TEMPLATE)
     parser.add_argument("--device", type=int, default=96)
     args = parser.parse_args()
 
     device_info = sd.query_devices(args.device, "input")
     sr = int(device_info["default_samplerate"])
-    print(f"[*] Sécurité double clé active sur : [{args.device}] {device_info['name']}")
+    print(f"[*] Analyse double clé active sur le signal BRUT : [{args.device}] {device_info['name']}")
 
-    sos = butter_bandpass(BANDPASS_LOW, BANDPASS_HIGH, sr)
     template_path = Path(args.template)
     if not template_path.exists():
         template_path = Path(__file__).parent / args.template
 
-    # Chargement du double profil (signal filtré + enveloppe)
-    template_raw_filtered, template_env = load_template(str(template_path), sr, sos)
-    print(f"[*] Profils de référence chargés (4s).")
+    # Chargement du profil brut du template (sans filtre)
+    template_raw, template_env = load_template(str(template_path), sr)
+    print(f"[*] Profils de référence bruts chargés (4s).")
 
     buf_len = len(template_env) * 3
     buf = np.zeros(buf_len, dtype=np.float32)
@@ -177,20 +165,17 @@ def main() -> None:
             if raw_rms < NOISE_GATE_RMS:
                 continue
 
-            # 1. Filtrage passe-bande
-            window_filtered = apply_bandpass(window, sos)
-
-            # 2. Clé Temporelle : Enveloppe de Hilbert
-            window_env = get_envelope(window_filtered)
+            # 1. Clé Temporelle : Enveloppe de Hilbert sur le signal brut
+            window_env = get_envelope(window)
             score_env_xcorr = normalized_envelope_xcorr(window_env, template_env)
 
-            # 3. Clé Fréquentielle : FFT (Bloque l'écran de chargement)
-            score_spec = spectral_similarity(window_filtered, template_raw_filtered)
+            # 2. Clé Fréquentielle : FFT sur le spectre complet brut
+            score_spec = spectral_similarity(window, template_raw)
 
             # Logs complets de diagnostic
             print(f"[{time.strftime('%H:%M:%S')}] RMS={raw_rms:.5f} | Env_XCorr={score_env_xcorr:.3f} | Spec={score_spec:.3f}")
 
-            # 4. Validation par la double condition (AND)
+            # 3. Validation par la double condition (AND)
             if score_env_xcorr >= STRICT_XCORR_THRESHOLD and score_spec >= STRICT_SPEC_THRESHOLD:
                 now = time.time()
                 if (now - last_alert) > COOLDOWN_SECONDS:
