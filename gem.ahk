@@ -1,0 +1,259 @@
+﻿#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+; ─── CONFIG ───────────────────────────────────────────────────────────────────
+DETECTOR_PATH := "C:\Users\Alexandre\fof_detector\gem.py"
+PYTHON_PATH   := "C:\miniconda\envs\sot\python.exe"
+FLAG_FILE     := "C:\Users\Alexandre\fof_detector\fort_detected.txt"
+BOAT_TOGGLE   := false
+
+; ─── TIMINGS (ms) ─────────────────────────────────────────────────────────────
+T_CURSOR         := 500    ; entre Q Q E
+T_MENU_NAV       := 1000   ; entre Enter jouer/aventure/haute mer
+T_AFTER_HAUTEMER := 5000   ; attente chargement avant sélection guilde
+T_ARROW          := 500    ; entre flèches guilde
+T_AFTER_GUILDE   := 1000   ; après Enter guilde
+T_BOAT_ARROW     := 500    ; entre flèches choix bateau
+T_BEFORE_DEPART  := 1000   ; avant confirmer départ
+T_AFTER_DEPART   := 1000   ; après confirmer départ
+T_GUILDE_OUVERTE := 500    ; entre Down et Enter mode guilde ouvert
+T_AFTER_CONFIRM  := 1000   ; après confirmation finale
+T_IN_GAME        := 45     ; secondes d'écoute en jeu
+T_QUIT_ARROW     := 500    ; entre flèches menu quitter
+T_TITLE_SCREEN   := 15     ; secondes attente écran titre
+T_AFTER_ENTER_TITLE := 10  ; secondes attente après Enter sur écran titre
+T_POPUP_ESC      := 500    ; entre les deux Escape popup
+
+; ─── HOTKEYS ──────────────────────────────────────────────────────────────────
+; Ctrl+Shift+F       → start loop (depuis menu principal)
+; Ctrl+Shift+Q → stop tout
+
+~^f:: {
+    StartLoop()
+}
+
+~^+q:: {
+    StopLoop()
+}
+
+; ─── STATE ────────────────────────────────────────────────────────────────────
+global running      := false
+global detector_pid := 0
+
+; ─── FONCTIONS ────────────────────────────────────────────────────────────────
+
+StopLoop() {
+    global running, detector_pid
+    running := false
+    
+    ; Attendre que Python envoie le webhook Discord avant de le kill
+    Sleep(3000)
+    if detector_pid != 0 {
+        ProcessClose(detector_pid)
+        detector_pid := 0
+    }
+    if FileExist(FLAG_FILE)
+        FileDelete(FLAG_FILE)
+    ToolTip("🛑 Loop stoppée à " . FormatTime(, "HH:mm:ss"))
+    SetTimer(() => ToolTip(), -5000)
+}
+
+StartLoop() {
+    global running, FLAG_FILE
+    if running {
+        ToolTip("⚠️ Loop déjà active")
+        SetTimer(() => ToolTip(), -2000)
+        return
+    }
+    
+    ; Nettoyage flag résiduel
+    if FileExist(FLAG_FILE)
+        FileDelete(FLAG_FILE)
+        
+    running := true
+    ToolTip("🏴‍☠️ Loop démarrée  |  Ctrl+Shift+Q pour stop")
+    
+    Loop {
+        if !running
+            break
+        if FileExist(FLAG_FILE) {
+            FileDelete(FLAG_FILE)
+            ToolTip("⚓ FORT DETECTED - Stop !")
+            StopLoop()
+            break
+        }
+        RunSession()
+        if !running
+            break
+    }
+}
+
+StartDetector() {
+    global detector_pid, PYTHON_PATH, DETECTOR_PATH, FLAG_FILE
+    
+    ; Mesure de sécurité radicale : Ferme tout résidu Python d'une session précédente
+    try {
+        if detector_pid != 0 {
+            ProcessClose(detector_pid)
+            detector_pid := 0
+        }
+    }
+    
+    if FileExist(FLAG_FILE)
+        FileDelete(FLAG_FILE)
+        
+    ; CORRECTION LOGIQUE : Passage correct de l'argument --listen requis par ton script Python
+    Run(PYTHON_PATH . " " . DETECTOR_PATH . " --listen 45", , "Hide", &detector_pid)
+}
+
+WaitChecked(ms) {
+    global running, FLAG_FILE
+    steps := ms // 100
+    loop steps {
+        if !running
+            return false
+        if FileExist(FLAG_FILE)
+            return false
+        Sleep(100)
+    }
+    return true
+}
+
+RunSession() {
+    global running, BOAT_TOGGLE
+    global T_CURSOR, T_MENU_NAV, T_AFTER_HAUTEMER, T_ARROW, T_AFTER_GUILDE
+    global T_BOAT_ARROW, T_BEFORE_DEPART, T_AFTER_DEPART, T_GUILDE_OUVERTE
+    global T_AFTER_CONFIRM, T_IN_GAME, T_QUIT_ARROW, T_TITLE_SCREEN
+    global T_AFTER_ENTER_TITLE, T_POPUP_ESC
+
+    ; ── Positionner curseur ────────────────────────────────────────────────
+    Send("q")
+    WaitChecked(T_CURSOR)
+    Send("q")
+    WaitChecked(T_CURSOR)
+    Send("e")
+    WaitChecked(T_CURSOR)
+
+    ; ── Jouer → Aventure → Haute Mer ──────────────────────────────────────
+    Send("{Enter}")
+    if !WaitChecked(T_MENU_NAV)
+        return
+    Send("{Enter}")
+    if !WaitChecked(T_MENU_NAV)
+        return
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_HAUTEMER)
+        return
+
+    ; ── Guilde ────────────────────────────────────────────────────────────
+    Send("{Right}")
+    if !WaitChecked(T_ARROW)
+        return
+    Send("{Right}")
+    if !WaitChecked(T_ARROW)
+        return
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_GUILDE)
+        return
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_GUILDE)
+        return
+
+    ; ── Choix bateau ──────────────────────────────────────────────────────
+    Send("{Up}")
+    WaitChecked(T_BOAT_ARROW)
+    Send("{Left}")
+    WaitChecked(T_BOAT_ARROW)
+    Send("{Left}")
+    WaitChecked(T_BOAT_ARROW)
+
+    if BOAT_TOGGLE {
+        Send("{Enter}")
+    } else {
+        Send("{Right}")
+        WaitChecked(T_BOAT_ARROW)
+        Send("{Enter}")
+    }
+    BOAT_TOGGLE := !BOAT_TOGGLE
+
+    ; ── Confirmer départ ──────────────────────────────────────────────────
+    if !WaitChecked(T_BEFORE_DEPART)
+        return
+    Send("{Up}")
+    WaitChecked(T_BOAT_ARROW)
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_DEPART)
+        return
+
+    ; ── Mode guilde ouvert ────────────────────────────────────────────────
+    Send("{Down}")
+    WaitChecked(T_GUILDE_OUVERTE)
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_CONFIRM)
+        return
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_CONFIRM)
+        return
+
+    ; ── Confirmation avant chargement ─────────────────────────────────────
+    if !WaitChecked(2500)
+        return
+    Send("{Enter}")
+    if !WaitChecked(T_AFTER_CONFIRM)
+        return
+
+    ; ── Lancer détecteur Python juste avant d'écouter ─────────────────────
+    StartDetector()
+
+    ; ── Attendre en jeu (chargement + écoute son) ─────────────────────────
+    loop T_IN_GAME {
+        if !running
+            return
+        if FileExist(FLAG_FILE)
+            return
+        Sleep(1000)
+    }
+
+    ; ── Kill détecteur si pas de fort ─────────────────────────────────────
+    if detector_pid != 0 {
+        ProcessClose(detector_pid)
+        detector_pid := 0
+    }
+
+    ; ── Quitter la partie ─────────────────────────────────────────────────
+    Send("{Escape}")
+    WaitChecked(1000)
+    Loop 7 {
+        Send("{Down}")
+        WaitChecked(T_QUIT_ARROW)
+    }
+    WaitChecked(300)
+    Send("{Enter}")
+    WaitChecked(1000)
+    Send("{Enter}")
+
+    ; ── Attendre écran titre ──────────────────────────────────────────────
+    loop T_TITLE_SCREEN {
+        if !running
+            return
+        if FileExist(FLAG_FILE)
+            return
+        Sleep(1000)
+    }
+
+    ; ── Enter + attendre ──────────────────────────────────────────────────
+    Send("{Enter}")
+    loop T_AFTER_ENTER_TITLE {
+        if !running
+            return
+        if FileExist(FLAG_FILE)
+            return
+        Sleep(1000)
+    }
+
+    ; ── Fermer popup ──────────────────────────────────────────────────────
+    Send("{Escape}")
+    WaitChecked(T_POPUP_ESC)
+    Send("{Escape}")
+    WaitChecked(1000)
+}

@@ -1,42 +1,37 @@
-"""
-Sea of Thieves - Fort Detector v3
-Mode --listen N : écoute N secondes, écrit fort_detected.txt si détecté, puis quitte.
-Intégration AHK pour loop automatique de sessions.
+"""Sea of Thieves - Fort Detector v3 (Optimized).
 
-Usage standalone:
-    python sot_horn_detector_v3.py
-
-Usage depuis AHK (mode listen):
-    python sot_horn_detector_v3.py --listen 45
+Mode --listen N : écoute N secondes, écrit fort_detected.txt si détecté, puis
+quitte. Intégration AHK pour loop automatique de sessions.
 """
 
 import argparse
-import time
-import threading
 import queue
 import sys
+import threading
+import time
 from pathlib import Path
-
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
-from scipy.signal import correlate, resample_poly, butter, sosfilt
+from scipy.signal import butter, correlate, resample_poly, sosfilt
 
+# ─── CONFIGURATION OPTIMISÉE ──────────────────────────────────────────────────
+DEFAULT_TEMPLATE = "sot_horn_template.wav"
+DEFAULT_THRESHOLD = 0.55  # Restauré à ta valeur fétiche stable
+DEFAULT_DEVICE = 96
+BLOCK_SIZE = 4096
+HOP_SECONDS = 0.5
+COOLDOWN_SECONDS = 15
+FLAG_FILE = Path(__file__).parent / "fort_detected.txt"
 
-# ─── CONFIG ────────────────────────────────────────────────────────────────────
+# Ajustement ultra-serré sur tes mesures réelles (Fréquences du vrai son)
+BANDPASS_LOW = 32
+BANDPASS_HIGH = 56
+FILTER_ORDER = 8  # Filtre d'ordre supérieur pour une coupure nette
 
-DEFAULT_TEMPLATE  = "sot_horn_template.wav"
-DEFAULT_THRESHOLD = 0.55
-DEFAULT_DEVICE    = 96
-BLOCK_SIZE        = 4096
-HOP_SECONDS       = 0.5
-COOLDOWN_SECONDS  = 15
-FLAG_FILE         = Path(__file__).parent / "fort_detected.txt"
+# Seuil de volume minimal (RMS) pour ignorer les silences/bruits légers du menu
+VOLUME_MIN_THRESHOLD = 0.005
 
-BANDPASS_LOW  = 30
-BANDPASS_HIGH = 200
-
-# ── Discord webhook (laisser vide pour désactiver) ─────────────────────────
 try:
     from config import DISCORD_WEBHOOK
 except ImportError:
@@ -45,17 +40,20 @@ except ImportError:
 
 # ─── UTILS ─────────────────────────────────────────────────────────────────────
 
-def butter_bandpass(low, high, sr, order=4):
+def butter_bandpass(low: float, high: float, sr: float, order: int = 8) -> np.ndarray:
+    """Crée un filtre passe-bande Butterworth avec l'ordre spécifié."""
     nyq = sr / 2
     sos = butter(order, [low / nyq, high / nyq], btype="band", output="sos")
     return sos
 
 
-def apply_bandpass(y, sos):
+def apply_bandpass(y: np.ndarray, sos: np.ndarray) -> np.ndarray:
+    """Applique le filtre SOS au signal."""
     return sosfilt(sos, y).astype(np.float32)
 
 
 def load_template(path: str, target_sr: int) -> np.ndarray:
+    """Charge et normalise le fichier audio de template (corne)."""
     y, sr = sf.read(path, dtype="float32", always_2d=False)
     if y.ndim > 1:
         y = y.mean(axis=1)
@@ -68,6 +66,7 @@ def load_template(path: str, target_sr: int) -> np.ndarray:
 
 
 def normalized_xcorr(a: np.ndarray, b: np.ndarray) -> float:
+    """Calcule la corrélation croisée normalisée entre deux signaux."""
     if len(a) < len(b):
         return 0.0
     a = a[-len(b) * 2:]
@@ -77,6 +76,7 @@ def normalized_xcorr(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def spectral_similarity(a: np.ndarray, b: np.ndarray) -> float:
+    """Calcule la similarité spectrale (FFT) entre deux fenêtres."""
     n = min(len(a), len(b))
     if n < 512:
         return 0.0
@@ -88,12 +88,12 @@ def spectral_similarity(a: np.ndarray, b: np.ndarray) -> float:
 
 # ─── ALERTE ────────────────────────────────────────────────────────────────────
 
-def alert(score: float):
+def alert(score: float) -> None:
+    """Déclenche les notifications système et webhooks lors de la détection."""
     print(f"\n{'=' * 50}")
     print(f"  ⚓  FORT DETECTED  |  score={score:.3f}")
     print(f"{'=' * 50}\n")
 
-    # Écrire le flag file pour AHK
     FLAG_FILE.write_text("detected")
 
     try:
@@ -121,12 +121,12 @@ def alert(score: float):
     except Exception:
         print("\a")
 
-    # Discord webhook
     if DISCORD_WEBHOOK:
         try:
-            import urllib.request, json
+            import json
+            import urllib.request
             payload = json.dumps({
-                "content": f"⚓ **FORT DETECTED** | score={score:.3f} | 🏴‍☠️ Go go go !"
+                "content": f"⚓ **FORT DETECTED** | score={score:.3f} | 🏴‍☠️ Vroum !"
             }).encode()
             req = urllib.request.Request(
                 DISCORD_WEBHOOK,
@@ -142,15 +142,14 @@ def alert(score: float):
             print(f"[discord] erreur: {e}")
 
 
-# ─── MAIN ──────────────────────────────────────────────────────────────────────
+# ─── MAIN LOOP ─────────────────────────────────────────────────────────────────
 
-def main():
-    parser = argparse.ArgumentParser(description="SoT Horn Detector v3")
-    parser.add_argument("--template",  default=DEFAULT_TEMPLATE)
+def main() -> None:
+    parser = argparse.ArgumentParser(description="SoT Horn Detector v3 - Opti")
+    parser.add_argument("--template", default=DEFAULT_TEMPLATE)
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
-    parser.add_argument("--device",    type=int,   default=DEFAULT_DEVICE)
-    parser.add_argument("--listen",    type=int,   default=0,
-                        help="Durée d'écoute en secondes puis quitte (0=infini)")
+    parser.add_argument("--device", type=int, default=DEFAULT_DEVICE)
+    parser.add_argument("--listen", type=int, default=0, help="Durée d'écoute (0=infini)")
     parser.add_argument("--list-devices", action="store_true")
     args = parser.parse_args()
 
@@ -163,8 +162,9 @@ def main():
     print(f"[*] Device: [{args.device}] {device_info['name']}")
     print(f"[*] Sample rate: {sr} Hz")
 
-    sos = butter_bandpass(BANDPASS_LOW, BANDPASS_HIGH, sr)
-    print(f"[*] Bandpass: {BANDPASS_LOW}-{BANDPASS_HIGH} Hz")
+    # Initialisation du filtre d'ordre supérieur renforcé (order=8)
+    sos = butter_bandpass(BANDPASS_LOW, BANDPASS_HIGH, sr, order=FILTER_ORDER)
+    print(f"[*] Bandpass: {BANDPASS_LOW}-{BANDPASS_HIGH} Hz (Ordre {FILTER_ORDER})")
 
     template_path = Path(args.template)
     if not template_path.exists():
@@ -177,9 +177,10 @@ def main():
     template = apply_bandpass(template_raw, sos)
     template /= np.max(np.abs(template)) + 1e-9
     print(f"[*] Template: {len(template)/sr:.2f}s  |  Seuil: {args.threshold}")
+    
     if args.listen:
         print(f"[*] Mode listen: {args.listen}s")
-    print(f"[*] Écoute en cours... (Ctrl+C pour quitter)\n")
+    print("[*] Écoute en cours... (Ctrl+C pour quitter)\n")
 
     buf_len = len(template) * 3
     buf = np.zeros(buf_len, dtype=np.float32)
@@ -217,13 +218,21 @@ def main():
                 window = buf.copy()
 
             window_bp = apply_bandpass(window, sos)
+            
+            # --- ÉTAPE ANTI-FAUX POSITIFS : MESURE DE L'ÉNERGIE BRUTE ---
+            rms_volume = float(np.sqrt(np.mean(window_bp**2)))
+            if rms_volume < VOLUME_MIN_THRESHOLD:
+                # Trop silencieux pour être la vraie corne (évite l'amplification du menu)
+                continue
+
+            # Normalisation sécurisée maintenant que le volume minimum est validé
             window_bp /= np.max(np.abs(window_bp)) + 1e-9
 
             score_xcorr = normalized_xcorr(window_bp, template)
-            score_spec  = spectral_similarity(window_bp, template)
+            score_spec = spectral_similarity(window_bp, template)
             score = 0.2 * score_xcorr + 0.8 * score_spec
 
-            print(f"[{time.strftime('%H:%M:%S')}] xcorr={score_xcorr:.3f}  spec={score_spec:.3f}  combined={score:.3f}")
+            print(f"[{time.strftime('%H:%M:%S')}] vol={rms_volume:.5f} xcorr={score_xcorr:.3f} spec={score_spec:.3f} combined={score:.3f}")
 
             now = time.time()
             if score >= args.threshold and (now - last_alert) > COOLDOWN_SECONDS:
