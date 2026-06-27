@@ -2,7 +2,7 @@
 #SingleInstance Force
 
 ; ─── CONFIGURATION DE CHEMINS ─────────────────────────────────────────────────
-DETECTOR_PATH := "C:\Users\Alexandre\fof_detector\gem.py"
+DETECTOR_PATH := "C:\Users\Alexandre\fof_detector\test.py"
 PYTHON_PATH   := "C:\miniconda\envs\sot\python.exe"
 FLAG_FILE     := "C:\Users\Alexandre\fof_detector\fort_detected.txt"
 BOAT_TOGGLE   := false
@@ -22,7 +22,7 @@ T_BEFORE_DEPART  := 1000   ; avant confirmer départ
 T_AFTER_DEPART   := 1000   ; après confirmer départ
 T_GUILDE_OUVERTE := 500    ; entre Down et Enter mode guilde ouvert
 T_AFTER_CONFIRM  := 1000   ; après confirmation finale
-T_IN_GAME        := 30     ; secondes d'écoute en jeu (en mode réel)
+T_IN_GAME        := 25     ; secondes d'écoute en jeu (en mode réel)
 T_QUIT_ARROW     := 500    ; entre flèches menu quitter
 T_TITLE_SCREEN   := 15     ; secondes attente écran titre
 T_AFTER_ENTER_TITLE := 10  ; secondes attente après Enter sur écran titre
@@ -251,7 +251,7 @@ RunSession() {
 
     ; ── Sortie de session ─────────────────────────────────────────────────
     Send("{Escape}")
-    WaitChecked(1000)
+    WaitChecked(3000)
     Loop 7 {
         Send("{Down}")
         WaitChecked(T_QUIT_ARROW)

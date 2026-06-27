@@ -30,13 +30,14 @@ DEFAULT_TEMPLATE = "sot_horn_template.wav"  # Ton fichier de 4 secondes
 
 # Isolation stricte de tes pics (43.2 Hz, 183.9 Hz, 93.8 Hz)
 BANDPASS_LOW: float = 35.0    # Coupe sous ton Top 1 (43.2 Hz)
-BANDPASS_HIGH: float = 700  # Coupe au-dessus de ton Top 2 (183.9 Hz)
+BANDPASS_HIGH: float = 450  # Coupe au-dessus de ton Top 2 (183.9 Hz)
+#ptet 450 500 mieux a voir avant 700
 
-STRICT_XCORR_THRESHOLD: float = 0.92  # Seuil de corrélation d'enveloppe
+STRICT_XCORR_THRESHOLD: float = 0.8  # Seuil de corrélation d'enveloppe 0.92
 NOISE_GATE_RMS: float = 0.01         # Capte les bruits sourds très lointains
 BLOCK_SIZE: int = 96000                # Échantillons par callback audio
 HOP_SECONDS: float = 0.4              # Pas de calcul (décalage de la fenêtre)
-COOLDOWN_SECONDS: int = 5            # Limite le spam sur ton salon Discord
+COOLDOWN_SECONDS: int = 15            # Limite le spam sur ton salon Discord
 
 
 # ─── TRAITEMENT DU SIGNAL (PASSE-BANDE & HILBERT) ──────────────────────────────
