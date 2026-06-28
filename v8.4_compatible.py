@@ -257,11 +257,11 @@ def alert(score_combined: float, score_csv: float, score_temp: float, rms: float
         return
 
     payload = {
-        "content": f"🛡️ **[Fusion Engine V8.4] STABLE TARGET VERIFIED !**\n"
-                   f"• **Indice de Fusion Final** : `{score_combined:.2f}%` \n"
-                   f"• **Accord Harmonique (CSV)** : `{score_csv:.1f}%` \n"
-                   f"• **Accord Temporel (Hilbert)** : `{score_temp:.3f}` \n"
-                   f"• **Volume Global (RMS)** : `{rms:.5f}`"
+        "content": f"💀🌊⛵🌊 **Vroum un Fort **\n"
+                   f"• Indice de Fusion Final : `{score_combined:.2f}%` \n"
+                   f"• Accord Harmonique (CSV) : `{score_csv:.1f}%` \n"
+                   f"• Accord Temporel (Hilbert) : `{score_temp:.3f}` \n"
+                   f"• Volume Global (RMS) : `{rms:.5f}`"
     }
     try:
         req = urllib.request.Request(
