@@ -17,7 +17,7 @@ SHOW_PYTHON   := true    ; true  = Affiche la console Python pendant T_IN_GAME
 T_CURSOR               := 500    ; entre Q Q E
 T_MENU_NAV             := 1000   ; entre Enter jouer/aventure/haute mer
 T_HAUTEMER_BEFORE_PY   := 2000   ; attente avant lancement Python (dans T_AFTER_HAUTEMER)
-T_HAUTEMER_AFTER_PY    := 15000  ; attente après lancement Python (reste de T_AFTER_HAUTEMER)
+T_HAUTEMER_AFTER_PY    := 2000  ; attente après lancement Python (reste de T_AFTER_HAUTEMER)
 T_ARROW                := 500    ; entre flèches guilde
 T_AFTER_GUILDE         := 1000   ; après Enter guilde
 T_BOAT_ARROW           := 500    ; entre flèches choix bateau
@@ -62,7 +62,7 @@ StopLoop() {
     if FileExist(FLAG_FILE)
         try FileDelete(FLAG_FILE)
         
-    ToolTip("🛑 Macro COMPLÈTEMENT FERMÉE à " . FormatTime(, "HH:mm:ss"))
+    ToolTip(" Macro COMPLÈTEMENT FERMÉE à " . FormatTime(, "HH:mm:ss"))
     SetTimer(() => ToolTip(), -5000)
     
     ExitApp
@@ -71,7 +71,7 @@ StopLoop() {
 StartLoop() {
     global running, FLAG_FILE
     if running {
-        ToolTip("⚠️ Boucle déjà active")
+        ToolTip(" Boucle déjà active")
         SetTimer(() => ToolTip(), -2000)
         return
     }
@@ -81,7 +81,7 @@ StartLoop() {
     }
         
     running := true
-    ToolTip("🏴‍☠️ Boucle de serveurs lancée | Ctrl+Shift+Q pour quitter")
+    ToolTip(" Boucle de serveurs lancée | Ctrl+Shift+Q pour quitter")
     
     Loop {
         if !running

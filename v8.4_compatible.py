@@ -371,7 +371,7 @@ def main() -> None:
             if is_silent:
                 status_str = "SILENCIEUX"
             elif is_match:
-                status_str = "DÉTECTION VALIDÉE !!! 💥"
+                status_str = "DÉTECTION VALIDÉE !!! "
             elif combined_score == 0.0 and csv_score > 0.08 and (0.30 <= psd_var <= 0.45):
                 status_str = "Bloqué (Faux Positif Écran de Chargement détecté par Profil PSD)"
             else:
