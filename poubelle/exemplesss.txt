@@ -1,0 +1,44 @@
+PAs de fort donc 1 faux positif : 
+[00:34:32] RMS: 0.02531 | EXP COMBINÉ: 0.00% | (CSV: 6.9% , Hilbert: 0.06 , PSD-Var: 0.3410) | Statut: Aucun Match
+[00:34:37] RMS: 0.02674 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.58 , PSD-Var: 0.4122) | Statut: Aucun Match
+[00:34:42] RMS: 0.07391 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.00 , PSD-Var: 0.7932) | Statut: Aucun Match
+[00:34:48] RMS: 0.09913 | EXP COMBINÉ: 0.00% | (CSV: 10.0% , Hilbert: 0.00 , PSD-Var: 0.2243) | Statut: Aucun Match
+[00:34:53] RMS: 0.10029 | EXP COMBINÉ: 0.00% | (CSV: 10.0% , Hilbert: 0.00 , PSD-Var: 0.2243) | Statut: Aucun Match
+[00:34:58] RMS: 0.07006 | EXP COMBINÉ: 100.00% | (CSV: 9.1% , Hilbert: 0.80 , PSD-Var: 0.3630) | Statut: DÉTECTION VALIDÉE !!! 💥
+DISCORD ALERTE ENVOYÉE ! | Fusion Exp: 100.00% | Force: FORT
+[00:35:03] RMS: 0.03080 | EXP COMBINÉ: 0.00% | (CSV: 7.6% , Hilbert: 0.63 , PSD-Var: 0.2246) | Statut: Aucun Match
+[00:35:08] RMS: 0.03077 | EXP COMBINÉ: 0.00% | (CSV: 5.4% , Hilbert: 0.35 , PSD-Var: 0.7164) | Statut: Aucun Match
+[00:35:13] RMS: 0.03753 | EXP COMBINÉ: 0.00% | (CSV: 5.6% , Hilbert: 0.29 , PSD-Var: 0.6286) | Statut: Aucun Match
+[00:35:18] RMS: 0.04273 | EXP COMBINÉ: 0.00% | (CSV: 5.6% , Hilbert: 0.29 , PSD-Var: 0.6286) | Statut: Aucun Match
+[00:35:23] RMS: 0.04003 | EXP COMBINÉ: 0.00% | (CSV: 5.3% , Hilbert: 0.29 , PSD-Var: 0.4163) | Statut: Aucun Match
+[00:35:29] RMS: 0.03574 | EXP COMBINÉ: 0.00% | (CSV: 6.2% , Hilbert: 0.00 , PSD-Var: 0.3370) | Statut: Aucun Match
+[00:35:34] RMS: 0.02668 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.58 , PSD-Var: 0.4173) | Statut: Aucun Match
+[00:35:39] RMS: 0.02804 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.58 , PSD-Var: 0.4173) | Statut: Aucun Match
+[00:35:44] RMS: 0.03032 | EXP COMBINÉ: 0.00% | (CSV: 7.8% , Hilbert: 0.93 , PSD-Var: 0.6057) | Statut: Aucun Match
+[00:35:49] RMS: 0.02926 | EXP COMBINÉ: 0.00% | (CSV: 8.2% , Hilbert: 0.71 , PSD-Var: 0.3508) | Statut: Aucun Match
+[00:35:54] RMS: 0.02879 | EXP COMBINÉ: 0.00% | (CSV: 8.2% , Hilbert: 0.71 , PSD-Var: 0.3508) | Statut: Aucun Match
+[00:35:59] RMS: 0.01837 | EXP COMBINÉ: 0.00% | (CSV: 7.1% , Hilbert: 0.28 , PSD-Var: 0.5088) | Statut: Aucun Match
+
+=> remetre stereo a 2% ?
+
+Vrai fort :
+
+
+Bien regarder le temps tout ligne ne se suivent pas 
+[00:37:33] RMS: 0.11717 | EXP COMBINÉ: 100.00% | (CSV: 8.9% , Hilbert: 0.51 , PSD-Var: 0.2502) | Statut: DÉTECTION VALIDÉE !!! 💥
+DISCORD ALERTE ENVOYÉE ! | Fusion Exp: 100.00% | Force: FORT
+[00:37:39] RMS: 0.12748 | EXP COMBINÉ: 100.00% | (CSV: 18.1% , Hilbert: 0.77 , PSD-Var: 0.5164) | Statut: DÉTECTION VALIDÉE !!! 💥
+[00:37:44] RMS: 0.12749 | EXP COMBINÉ: 100.00% | (CSV: 18.1% , Hilbert: 0.77 , PSD-Var: 0.5164) | Statut: DÉTECTION VALIDÉE !!! 💥
+
+[00:38:35] RMS: 0.09132 | EXP COMBINÉ: 100.00% | (CSV: 18.7% , Hilbert: 0.78 , PSD-Var: 0.2248) | Statut: DÉTECTION VALIDÉE !!! 💥
+DISCORD ALERTE ENVOYÉE ! | Fusion Exp: 100.00% | Force: FORT
+[00:38:40] RMS: 0.09535 | EXP COMBINÉ: 100.00% | (CSV: 18.7% , Hilbert: 0.78 , PSD-Var: 0.2248) | Statut: DÉTECTION VALIDÉE !!! 💥
+[00:38:45] RMS: 0.09538 | EXP COMBINÉ: 100.00% | (CSV: 18.7% , Hilbert: 0.78 , PSD-Var: 0.2248) | Statut: DÉTECTION VALIDÉE !!! 💥
+
+[00:39:26] RMS: 0.07738 | EXP COMBINÉ: 100.00% | (CSV: 10.2% , Hilbert: 0.75 , PSD-Var: 0.3963) | Statut: DÉTECTION VALIDÉE !!! 💥
+
+[00:40:28] RMS: 0.01787 | EXP COMBINÉ: 0.00% | (CSV: 8.1% , Hilbert: 0.51 , PSD-Var: 1.0289) | Statut: Aucun Match
+[00:40:33] RMS: 0.01456 | EXP COMBINÉ: 100.00% | (CSV: 9.5% , Hilbert: 0.49 , PSD-Var: 0.9752) | Statut: DÉTECTION VALIDÉE !!! 💥
+DISCORD ALERTE ENVOYÉE ! | Fusion Exp: 100.00% | Force: FAIBLE
+[00:40:38] RMS: 0.01476 | EXP COMBINÉ: 100.00% | (CSV: 9.5% , Hilbert: 0.49 , PSD-Var: 0.9752) | Statut: DÉTECTION VALIDÉE !!! 💥
+[00:40:43] RMS: 0.01303 | EXP COMBINÉ: 0.00% | (CSV: 7.1% , Hilbert: 0.37 , PSD-Var: 0.1240) | Statut: Aucun Match

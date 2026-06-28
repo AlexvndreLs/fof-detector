@@ -1,0 +1,54 @@
+vRAI FORT : 1 oublié
+
+[00:49:51] RMS: 0.01404 | EXP COMBINÉ: 0.00% | (CSV: 11.7% , Hilbert: 0.35 , Stéréo-Disp: 0.317 , PSD-Var: 1.3706) | Statut: Aucun Matc
+
+[00:50:27] RMS: 0.02526 | EXP COMBINÉ: 100.00% | (CSV: 9.6% , Hilbert: 0.61 , Stéréo-Disp: 0.286 , PSD-Var: 0.3998) | Statut: DÉTECTION
+ VALIDÉE !!! 💥
+
+[00:51:03] RMS: 0.06647 | EXP COMBINÉ: 100.00% | (CSV: 9.2% , Hilbert: 0.62 , Stéréo-Disp: 0.465 , PSD-Var: 0.3493) | Statut: DÉTECTION
+ VALIDÉE !!! 💥
+DISCORD ALERTE ENVOYÉE ! | Fusion Exp: 100.00% | Force: FORT
+[00:51:08] RMS: 0.07473 | EXP COMBINÉ: 100.00% | (CSV: 10.3% , Hilbert: 0.66 , Stéréo-Disp: 0.460 , PSD-Var: 0.3455) | Statut: DÉTECTIO
+N VALIDÉE !!! 💥
+[00:51:13] RMS: 0.07471 | EXP COMBINÉ: 100.00% | (CSV: 10.3% , Hilbert: 0.66 , Stéréo-Disp: 0.460 , PSD-Var: 0.3455) | Statut: DÉTECTIO
+N VALIDÉE !!! 💥
+
+[00:52:09] RMS: 0.02723 | EXP COMBINÉ: 100.00% | (CSV: 15.5% , Hilbert: 0.74 , Stéréo-Disp: 0.033 , PSD-Var: 0.1652) | Statut: DÉTECTIO
+N VALIDÉE !!! 💥
+DISCORD ALERTE ENVOYÉE ! | Fusion Exp: 100.00% | Force: FAIBLE
+[00:52:14] RMS: 0.02708 | EXP COMBINÉ: 100.00% | (CSV: 15.5% , Hilbert: 0.74 , Stéréo-Disp: 0.033 , PSD-Var: 0.1652) | Statut: DÉTECTIO
+N VALIDÉE !!! 💥
+
+paS DE FORT: OK
+
+[00:53:29] RMS: 0.03313 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.37 , Stéréo-Disp: 0.032 , PSD-Var: 0.5801) | Statut: Aucun Match
+[00:53:34] RMS: 0.02807 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.47 , Stéréo-Disp: 0.263 , PSD-Var: 0.6068) | Statut: Aucun Match
+[00:53:39] RMS: 0.02818 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.47 , Stéréo-Disp: 0.243 , PSD-Var: 0.6068) | Statut: Aucun Match
+[00:53:44] RMS: 0.09415 | EXP COMBINÉ: 0.00% | (CSV: 10.1% , Hilbert: 0.00 , Stéréo-Disp: 0.019 , PSD-Var: 0.2882) | Statut: Aucun Matc
+h
+[00:53:49] RMS: 0.10058 | EXP COMBINÉ: 0.00% | (CSV: 10.1% , Hilbert: 0.00 , Stéréo-Disp: 0.001 , PSD-Var: 0.2882) | Statut: Aucun Matc
+h
+[00:53:54] RMS: 0.09458 | EXP COMBINÉ: 0.00% | (CSV: 9.2% , Hilbert: 0.80 , Stéréo-Disp: 0.005 , PSD-Var: 0.1585) | Statut: Aucun Match
+[00:54:00] RMS: 0.04165 | EXP COMBINÉ: 0.00% | (CSV: 9.0% , Hilbert: 0.65 , Stéréo-Disp: 0.022 , PSD-Var: 0.3846) | Statut: Bloqué (Fau
+x Positif Écran de Chargement détecté par Profil PSD)
+[00:54:05] RMS: 0.02698 | EXP COMBINÉ: 0.00% | (CSV: 5.8% , Hilbert: 0.49 , Stéréo-Disp: 0.022 , PSD-Var: 0.4203) | Statut: Bloqué (Fau
+x Positif Écran de Chargement détecté par Profil PSD)
+[00:54:10] RMS: 0.02753 | EXP COMBINÉ: 0.00% | (CSV: 5.6% , Hilbert: 0.24 , Stéréo-Disp: 0.010 , PSD-Var: 0.3606) | Statut: Bloqué (Fau
+x Positif Écran de Chargement détecté par Profil PSD)
+[00:54:15] RMS: 0.03080 | EXP COMBINÉ: 0.00% | (CSV: 6.5% , Hilbert: 0.00 , Stéréo-Disp: 0.133 , PSD-Var: 0.4304) | Statut: Bloqué (Fau
+x Positif Écran de Chargement détecté par Profil PSD)
+[00:54:20] RMS: 0.02684 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.58 , Stéréo-Disp: 0.287 , PSD-Var: 0.3351) | Statut: Bloqué (Fau
+x Positif Écran de Chargement détecté par Profil PSD)
+[00:54:25] RMS: 0.02847 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.58 , Stéréo-Disp: 0.365 , PSD-Var: 0.3351) | Statut: Bloqué (Fau
+x Positif Écran de Chargement détecté par Profil PSD)
+[00:54:30] RMS: 0.03013 | EXP COMBINÉ: 0.00% | (CSV: 7.8% , Hilbert: 0.91 , Stéréo-Disp: 0.388 , PSD-Var: 0.4857) | Statut: Aucun Match
+[00:54:35] RMS: 0.02936 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.71 , Stéréo-Disp: 0.359 , PSD-Var: 0.1652) | Statut: Aucun Match
+[00:54:41] RMS: 0.02501 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.71 , Stéréo-Disp: 0.329 , PSD-Var: 0.1652) | Statut: Aucun Match
+[00:54:46] RMS: 0.00980 | EXP COMBINÉ: 0.00% | (CSV: 6.1% , Hilbert: 0.23 , Stéréo-Disp: 0.091 , PSD-Var: 0.3968) | Statut: Bloqué (Fau
+x Positif Écran de Chargement détecté par Profil PSD)
+[00:54:51] RMS: 0.01554 | EXP COMBINÉ: 0.00% | (CSV: 5.5% , Hilbert: 0.47 , Stéréo-Disp: 0.033 , PSD-Var: 0.1356) | Statut: Aucun Match
+[00:54:56] RMS: 0.01966 | EXP COMBINÉ: 0.00% | (CSV: 5.5% , Hilbert: 0.47 , Stéréo-Disp: 0.141 , PSD-Var: 0.1356) | Statut: Aucun Match
+[00:55:01] RMS: 0.03360 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.54 , Stéréo-Disp: 0.178 , PSD-Var: 0.8854) | Statut: Aucun Match
+[00:55:06] RMS: 0.09239 | EXP COMBINÉ: 0.00% | (CSV: 9.6% , Hilbert: 0.32 , Stéréo-Disp: 0.029 , PSD-Var: 0.1903) | Statut: Aucun Match
+[00:55:11] RMS: 0.09907 | EXP COMBINÉ: 0.00% | (CSV: 9.6% , Hilbert: 0.32 , Stéréo-Disp: 0.020 , PSD-Var: 0.1903) | Statut: Aucun Match
+

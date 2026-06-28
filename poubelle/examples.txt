@@ -1,0 +1,44 @@
+PAs de fort :
+[23:52:21] RMS: 0.00424 | EXP COMBINÉ: 0.00% | (CSV: 4.6% , Hilbert: 0.03 , Centroid: 420.7Hz) | Statut: Aucun Match
+[23:52:26] RMS: 0.00873 | EXP COMBINÉ: 0.00% | (CSV: 4.7% , Hilbert: 0.10 , Centroid: 398.7Hz) | Statut: Aucun Match
+[23:52:32] RMS: 0.00915 | EXP COMBINÉ: 0.00% | (CSV: 6.1% , Hilbert: 0.39 , Centroid: 594.8Hz) | Statut: Aucun Match
+[23:52:37] RMS: 0.01140 | EXP COMBINÉ: 0.00% | (CSV: 6.1% , Hilbert: 0.39 , Centroid: 594.8Hz) | Statut: Aucun Match
+[23:52:42] RMS: 0.00805 | EXP COMBINÉ: 0.00% | (CSV: 4.6% , Hilbert: 0.27 , Centroid: 593.7Hz) | Statut: Aucun Match
+[23:52:47] RMS: 0.01277 | EXP COMBINÉ: 0.00% | (CSV: 4.6% , Hilbert: 0.26 , Centroid: 349.6Hz) | Statut: Aucun Match
+[23:52:52] RMS: 0.02163 | EXP COMBINÉ: 0.00% | (CSV: 6.9% , Hilbert: 0.27 , Centroid: 531.6Hz) | Statut: Aucun Match
+[23:52:57] RMS: 0.02203 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.53 , Centroid: 303.8Hz) | Statut: Aucun Match
+[23:53:02] RMS: 0.02622 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.53 , Centroid: 303.8Hz) | Statut: Aucun Match
+[23:53:07] RMS: 0.02717 | EXP COMBINÉ: 0.00% | (CSV: 8.1% , Hilbert: 0.62 , Centroid: 258.8Hz) | Statut: Aucun Match
+[23:53:13] RMS: 0.02664 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.72 , Centroid: 252.6Hz) | Statut: Aucun Match
+[23:53:18] RMS: 0.02165 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.72 , Centroid: 252.6Hz) | Statut: Aucun Match
+[23:53:23] RMS: 0.00867 | EXP COMBINÉ: 0.00% | (CSV: 5.9% , Hilbert: 0.70 , Centroid: 382.7Hz) | Statut: Aucun Match
+[23:53:28] RMS: 0.01189 | EXP COMBINÉ: 0.00% | (CSV: 5.4% , Hilbert: 0.38 , Centroid: 576.3Hz) | Statut: Aucun Match
+[23:53:33] RMS: 0.01445 | EXP COMBINÉ: 0.00% | (CSV: 6.3% , Hilbert: 0.47 , Centroid: 543.6Hz) | Statut: Aucun Match
+[23:53:38] RMS: 0.02300 | EXP COMBINÉ: 0.00% | (CSV: 7.0% , Hilbert: 0.09 , Centroid: 499.8Hz) | Statut: Aucun Match
+[23:53:43] RMS: 0.02932 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.63 , Centroid: 304.8Hz) | Statut: Aucun Match
+[23:53:48] RMS: 0.09074 | EXP COMBINÉ: 0.00% | (CSV: 9.6% , Hilbert: 0.00 , Centroid: 409.4Hz) | Statut: Aucun Match
+[23:53:54] RMS: 0.09651 | EXP COMBINÉ: 0.00% | (CSV: 9.6% , Hilbert: 0.00 , Centroid: 409.4Hz) | Statut: Aucun Match
+[23:53:59] RMS: 0.09079 | EXP COMBINÉ: 0.00% | (CSV: 9.2% , Hilbert: 0.63 , Centroid: 168.4Hz) | Statut: Aucun Match
+[23:54:04] RMS: 0.03869 | EXP COMBINÉ: 0.00% | (CSV: 8.4% , Hilbert: 0.67 , Centroid: 269.6Hz) | Statut: Aucun Match
+[23:54:09] RMS: 0.02354 | EXP COMBINÉ: 0.00% | (CSV: 6.2% , Hilbert: 0.36 , Centroid: 403.2Hz) | Statut: Aucun Match
+[23:54:14] RMS: 0.02605 | EXP COMBINÉ: 0.00% | (CSV: 5.1% , Hilbert: 0.48 , Centroid: 447.4Hz) | Statut: Aucun Match
+[23:54:19] RMS: 0.03463 | EXP COMBINÉ: 0.00% | (CSV: 5.9% , Hilbert: 0.33 , Centroid: 568.0Hz) | Statut: Aucun Match
+[23:54:24] RMS: 0.03661 | EXP COMBINÉ: 0.00% | (CSV: 5.9% , Hilbert: 0.33 , Centroid: 568.0Hz) | Statut: Aucun Match
+[23:54:29] RMS: 0.03314 | EXP COMBINÉ: 0.00% | (CSV: 4.9% , Hilbert: 0.30 , Centroid: 559.4Hz) | Statut: Aucun Match
+[23:54:34] RMS: 0.02842 | EXP COMBINÉ: 0.00% | (CSV: 6.6% , Hilbert: 0.00 , Centroid: 512.8Hz) | Statut: Aucun Match
+[23:54:40] RMS: 0.02354 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.56 , Centroid: 256.0Hz) | Statut: Aucun Match
+[23:54:45] RMS: 0.02556 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.56 , Centroid: 256.0Hz) | Statut: Aucun Match
+[23:54:50] RMS: 0.02744 | EXP COMBINÉ: 0.00% | (CSV: 7.8% , Hilbert: 0.92 , Centroid: 343.9Hz) | Statut: Aucun Match
+[23:54:55] RMS: 0.02657 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.74 , Centroid: 258.0Hz) | Statut: Aucun Match
+[23:55:00] RMS: 0.02195 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.74 , Centroid: 258.0Hz) | Statut: Aucun Match
+[23:55:05] RMS: 0.01112 | EXP COMBINÉ: 0.00% | (CSV: 5.7% , Hilbert: 0.25 , Centroid: 310.5Hz) | Statut: Aucun Match
+[23:55:10] RMS: 0.01365 | EXP COMBINÉ: 0.00% | (CSV: 8.0% , Hilbert: 0.69 , Centroid: 669.5Hz) | Statut: Aucun Match
+
+
+exemple de fort :
+
+[23:56:45] RMS: 0.01569 | EXP COMBINÉ: 0.00% | (CSV: 9.6% , Hilbert: 0.47 , Centroid: 324.0Hz) | Statut: Aucun Match
+[23:58:12] RMS: 0.05952 | EXP COMBINÉ: 0.00% | (CSV: 17.1% , Hilbert: 0.74 , Centroid: 458.2Hz) | Statut: Aucun Match
+[00:00:35] RMS: 0.01444 | EXP COMBINÉ: 0.00% | (CSV: 9.7% , Hilbert: 0.76 , Centroid: 401.4Hz) | Statut: Aucun Match
+[00:02:02] RMS: 0.01976 | EXP COMBINÉ: 0.00% | (CSV: 13.5% , Hilbert: 0.74 , Centroid: 437.3Hz) | Statut: Aucun Match
+[00:02:58] RMS: 0.01318 | EXP COMBINÉ: 0.00% | (CSV: 9.7% , Hilbert: 0.77 , Centroid: 356.5Hz) | Statut: Aucun Match

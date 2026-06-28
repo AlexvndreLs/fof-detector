@@ -1,0 +1,44 @@
+Vrai fort : [00:08:38] RMS: 0.01419 | EXP COMBINÉ: 0.00% | (CSV: 9.6% , Hilbert: 0.47 , Stéréo-Disp: 0.590) | Statut: Aucun Match
+[00:08:43] RMS: 0.01479 | EXP COMBINÉ: 0.00% | (CSV: 9.8% , Hilbert: 0.55 , Stéréo-Disp: 0.585) | Statut: Aucun Match
+[00:09:55] RMS: 0.01190 | EXP COMBINÉ: 0.00% | (CSV: 9.5% , Hilbert: 0.69 , Stéréo-Disp: 0.531) | Statut: Aucun Match
+[00:10:30] RMS: 0.02802 | EXP COMBINÉ: 100.00% | (CSV: 13.8% , Hilbert: 0.76 , Stéréo-Disp: 0.465) | Statut: DÉTECTION VA
+[00:26:15] RMS: 0.04581 | EXP COMBINÉ: 0.00% | (CSV: 10.1% , Hilbert: 0.60 , Stéréo-Disp: 0.036)
+
+PAs de fort :
+
+[00:11:32] RMS: 0.01729 | EXP COMBINÉ: 0.00% | (CSV: 6.2% , Hilbert: 0.21 , Stéréo-Disp: 0.002) | Statut: Bloqué (Faux Posi
+tif Écran de Chargement / Mono parfait détecté)
+[00:11:37] RMS: 0.06709 | EXP COMBINÉ: 0.00% | (CSV: 6.2% , Hilbert: 0.21 , Stéréo-Disp: 0.359) | Statut: Aucun Match
+[00:11:42] RMS: 0.08777 | EXP COMBINÉ: 0.00% | (CSV: 6.7% , Hilbert: 0.65 , Stéréo-Disp: 0.561) | Statut: Aucun Match
+[00:11:47] RMS: 0.08783 | EXP COMBINÉ: 0.00% | (CSV: 7.0% , Hilbert: 0.64 , Stéréo-Disp: 0.561) | Statut: Aucun Match
+[00:11:52] RMS: 0.04863 | EXP COMBINÉ: 0.00% | (CSV: 7.0% , Hilbert: 0.64 , Stéréo-Disp: 0.749) | Statut: Aucun Match
+[00:11:57] RMS: 0.01685 | EXP COMBINÉ: 0.00% | (CSV: 5.3% , Hilbert: 0.29 , Stéréo-Disp: 0.056) | Statut: Aucun Match
+[00:12:02] RMS: 0.01658 | EXP COMBINÉ: 0.00% | (CSV: 7.1% , Hilbert: 0.38 , Stéréo-Disp: 0.030) | Statut: Bloqué (Faux Posi
+tif Écran de Chargement / Mono parfait détecté)
+[00:12:07] RMS: 0.01945 | EXP COMBINÉ: 0.00% | (CSV: 7.1% , Hilbert: 0.38 , Stéréo-Disp: 0.104) | Statut: Aucun Match
+[00:12:13] RMS: 0.02633 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.57 , Stéréo-Disp: 0.297) | Statut: Aucun Match
+[00:12:18] RMS: 0.06382 | EXP COMBINÉ: 0.00% | (CSV: 7.6% , Hilbert: 0.00 , Stéréo-Disp: 0.013) | Statut: Bloqué (Faux Posi
+tif Écran de Chargement / Mono parfait détecté)
+[00:12:23] RMS: 0.09902 | EXP COMBINÉ: 0.00% | (CSV: 10.1% , Hilbert: 0.00 , Stéréo-Disp: 0.019) | Statut: Bloqué (Faux Pos
+itif Écran de Chargement / Mono parfait détecté)
+[00:12:28] RMS: 0.10065 | EXP COMBINÉ: 0.00% | (CSV: 10.1% , Hilbert: 0.00 , Stéréo-Disp: 0.000) | Statut: Bloqué (Faux Pos
+itif Écran de Chargement / Mono parfait détecté)
+[00:12:33] RMS: 0.07797 | EXP COMBINÉ: 0.00% | (CSV: 9.1% , Hilbert: 0.80 , Stéréo-Disp: 0.032) | Statut: Bloqué (Faux Posi
+tif Écran de Chargement / Mono parfait détecté)
+[00:12:38] RMS: 0.03202 | EXP COMBINÉ: 0.00% | (CSV: 8.5% , Hilbert: 0.68 , Stéréo-Disp: 0.007) | Statut: Bloqué (Faux Posi
+tif Écran de Chargement / Mono parfait détecté)
+[00:12:43] RMS: 0.02766 | EXP COMBINÉ: 0.00% | (CSV: 5.3% , Hilbert: 0.36 , Stéréo-Disp: 0.012) | Statut: Bloqué (Faux Posi
+tif Écran de Chargement / Mono parfait détecté)
+[00:12:48] RMS: 0.03314 | EXP COMBINÉ: 0.00% | (CSV: 6.0% , Hilbert: 0.29 , Stéréo-Disp: 0.001) | Statut: Bloqué (Faux Posi
+tif Écran de Chargement / Mono parfait détecté)
+[00:12:53] RMS: 0.02672 | EXP COMBINÉ: 0.00% | (CSV: 6.0% , Hilbert: 0.29 , Stéréo-Disp: 0.000) | Statut: Bloqué (Faux Posi
+tif Écran de Chargement / Mono parfait détecté)
+[00:12:59] RMS: 0.03266 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.59 , Stéréo-Disp: 0.214) | Statut: Aucun Match
+[00:13:04] RMS: 0.02439 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.59 , Stéréo-Disp: 0.336) | Statut: Aucun Match
+[00:13:09] RMS: 0.03190 | EXP COMBINÉ: 0.00% | (CSV: 7.4% , Hilbert: 0.59 , Stéréo-Disp: 0.379) | Statut: Aucun Match
+[00:13:14] RMS: 0.02915 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.74 , Stéréo-Disp: 0.364) | Statut: Aucun Match
+[00:13:19] RMS: 0.03015 | EXP COMBINÉ: 0.00% | (CSV: 8.3% , Hilbert: 0.74 , Stéréo-Disp: 0.368) | Statut: Aucun Match
+[00:13:24] RMS: 0.02103 | EXP COMBINÉ: 0.00% | (CSV: 8.2% , Hilbert: 0.80 , Stéréo-Disp: 0.283) | Statut: Aucun Match
+
+
+

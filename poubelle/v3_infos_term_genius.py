@@ -1,6 +1,7 @@
 """
 Sea of Thieves - Anti-False Positive Horn Detector (Version Spectrogramme 2D)
 Analyse par corrélation croisée 2D de spectrogrammes de Mel (Pattern Matching).
+Configuration optimisée : Lot de 15s, Rapport complet de calibration toutes les 5s.
 """
 
 import argparse
@@ -12,7 +13,7 @@ import time
 import urllib.request
 from math import gcd
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 
 import numpy as np
 import sounddevice as sd
@@ -30,13 +31,13 @@ DEFAULT_TEMPLATE: str = "sot_horn_template.wav"
 # Configuration DSP d'analyse (Sweet Spot 48 kHz)
 N_FFT: int = 2048
 HOP_LENGTH: int = 512
-N_MELS: int = 64
+N_MELS: int = 256
 F_MIN: float = 100.0   # On ignore les infra-basses du navire
 F_MAX: float = 1500.0  # Zone fréquentielle utile de la corne
 
-# Seuils de détection
-STRICT_2D_CORR_THRESHOLD: float = 0.75  # Seuil de similarité de l'empreinte 2D
-NOISE_GATE_RMS: float = 0.002
+# ─── LES SEUILS À AJUSTER À LA MAIN ───────────────────────────────────────────
+STRICT_2D_CORR_THRESHOLD: float = 120.0  # Seuil à dépasser pour l'alerte Discord
+NOISE_GATE_RMS: float = 0.01           # En dessous, le son est considéré comme nul
 COOLDOWN_SECONDS: int = 15
 
 
@@ -60,7 +61,6 @@ def get_mel_filterbank(sr: int, n_fft: int, n_mels: int, fmin: float, fmax: floa
     mel_pts = np.linspace(mel_min, mel_max, n_mels + 2)
     hz_pts = mel_to_hz(mel_pts)
     
-    # Bins FFT correspondants
     bins = np.floor((n_fft + 1) * hz_pts / sr).astype(int)
     fb = np.zeros((n_mels, len(fft_freqs)))
     
@@ -75,7 +75,6 @@ def get_mel_filterbank(sr: int, n_fft: int, n_mels: int, fmin: float, fmax: floa
 
 def compute_mel_spectrogram(signal: np.ndarray, sr: int) -> np.ndarray:
     """Calcule le spectrogramme de Mel d'un signal (Log-amplitude)."""
-    # 1. Short-Time Fourier Transform (STFT) avec fenêtre de Hann
     window = np.hanning(N_FFT)
     frames = []
     for i in range(0, len(signal) - N_FFT, HOP_LENGTH):
@@ -86,16 +85,12 @@ def compute_mel_spectrogram(signal: np.ndarray, sr: int) -> np.ndarray:
     if not frames:
         return np.zeros((N_MELS, 1), dtype=np.float32)
         
-    stft_matrix = np.array(frames).T  # Forme : (Freq, Temps)
-    
-    # 2. Application du banc de filtres Mel
+    stft_matrix = np.array(frames).T
     fb = get_mel_filterbank(sr, N_FFT, N_MELS, F_MIN, F_MAX)
     mel_spec = np.dot(fb, stft_matrix)
     
-    # 3. Passage à l'échelle logarithmique (dB-like)
     log_mel_spec = np.log10(mel_spec + 1e-6)
     
-    # Normalisation globale pour la robustesse de la corrélation
     log_mel_spec -= np.mean(log_mel_spec)
     std_dev = np.std(log_mel_spec)
     if std_dev > 1e-6:
@@ -119,15 +114,13 @@ def load_template_spectrogram(path: str, target_sr: int) -> np.ndarray:
 # ─── PIPELINE D'ALERTE ─────────────────────────────────────────────────────────
 
 def alert(score_2d: float, rms_force: float, strength_label: str) -> None:
-    print(f"\n{'=' * 60}")
-    print(f"  ⚓  FORT DETECTED (2D Engine) | Match_Score: {score_2d:.3f} | Force: {strength_label}")
-    print(f"{'=' * 60}\n")
+    print(f"\nDISCORD ALERTE ENVOYÉE ! | Match: {score_2d:.3f} | Force: {strength_label}")
 
     if not DISCORD_WEBHOOK:
         return
 
     payload: Dict[str, Any] = {
-        "content": f"🏴‍☠️ **[Spectrogram-2D Engine] FORT DETECTED !**\n"
+        "content": f"**[Spectrogram-2D Engine] FORT DETECTED !**\n"
                    f"• **Force du signal** : `{strength_label}` (RMS: {rms_force:.4f})\n"
                    f"• **Similarité Empreinte 2D** : `{score_2d:.3f}`"
     }
@@ -146,7 +139,7 @@ def alert(score_2d: float, rms_force: float, strength_label: str) -> None:
 # ─── MAIN ENGINE ───────────────────────────────────────────────────────────────
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="SoT Horn Detector - Spectrogram 2D Mode")
+    parser = argparse.ArgumentParser(description="SoT Horn Detector - Calibration Mode")
     parser.add_argument("--template", default=DEFAULT_TEMPLATE)
     parser.add_argument("--device", type=int, default=96)
     args = parser.parse_args()
@@ -158,7 +151,7 @@ def main() -> None:
         sys.exit(1)
         
     sr: int = int(device_info["default_samplerate"])
-    print(f"[*] Analyse matricielle active sur le flux : [{args.device}] {device_info['name']}")
+    print(f"[*] Analyse active sur le flux : [{args.device}] {device_info['name']}")
 
     template_path = Path(args.template)
     if not template_path.exists():
@@ -168,15 +161,18 @@ def main() -> None:
         print(f"[Erreur] Fichier template {args.template} introuvable.")
         sys.exit(1)
 
-    # Extraction de la matrice d'empreinte de la corne
-    print("[*] Génération de la matrice de référence (Spectrogramme de Mel)...")
+    print("[*] Génération de la matrice de référence...")
     template_spec = load_template_spectrogram(str(template_path), sr)
     t_frames = template_spec.shape[1]
-    print(f"[*] Empreinte chargée. Taille de la matrice : {template_spec.shape} ({t_frames} frames temporelles).")
+    
+    # Pré-calcul de la variance énergétique du template pour le facteur normatif
+    template_energy = np.sum(template_spec ** 2)
+    
+    print(f"[*] Empreinte chargée ({t_frames} frames).")
+    print(f"[*] En attente du premier lot de 15s (Analyse toutes les 5s)...")
+    print(f"{'─' * 70}")
 
-    # Buffer de stockage pour accumuler le lot de ~35 secondes
-    # 35 secondes à 48kHz = ~1 680 000 échantillons
-    buf_len: int = sr * 35
+    buf_len: int = sr * 15
     buf = np.zeros(buf_len, dtype=np.float32)
     buf_lock = threading.Lock()
     audio_q: queue.Queue = queue.Queue()
@@ -187,7 +183,6 @@ def main() -> None:
 
     def detector_loop() -> None:
         nonlocal buf, last_alert
-        # On traite par lot : on attend d'avoir cumulé l'équivalent de 5 secondes de nouvelles données
         hop_samples: int = sr * 5
         accumulated: int = 0
 
@@ -202,7 +197,6 @@ def main() -> None:
                 buf[-len(chunk):] = chunk
                 accumulated += len(chunk)
 
-            # Si on n'a pas accumulé assez de nouveautés pour le traitement par lot, on attend
             if accumulated < hop_samples:
                 continue
             accumulated = 0
@@ -210,29 +204,51 @@ def main() -> None:
             with buf_lock:
                 current_lot = buf.copy()
 
+            current_time = time.strftime('%H:%M:%S')
             raw_rms = np.sqrt(np.mean(current_lot ** 2))
-            if raw_rms < NOISE_GATE_RMS:
-                continue
-
-            # 1. Calcul du spectrogramme de Mel global du lot de 35s
-            lot_spec = compute_mel_spectrogram(current_lot, sr)
             
-            if lot_spec.shape[1] < t_frames:
+            # 1. Traitement dynamique du spectrogramme de Mel du lot courant
+            window = np.hanning(N_FFT)
+            frames = []
+            for i in range(0, len(current_lot) - N_FFT, HOP_LENGTH):
+                frame = current_lot[i:i + N_FFT] * window
+                fft_mag = np.abs(np.fft.rfft(frame, n=N_FFT))
+                frames.append(fft_mag)
+                
+            if not frames:
                 continue
-
-            # 2. Corrélation croisée 2D entre le gros spectrogramme et notre template
-            # 'valid' signifie que la petite matrice doit tenir entièrement dans la grande
-            corr_2d = correlate2d(lot_spec, template_spec, mode='valid')
+                
+            stft_matrix = np.array(frames).T
+            fb = get_mel_filterbank(sr, N_FFT, N_MELS, F_MIN, F_MAX)
+            mel_spec = np.dot(fb, stft_matrix)
+            log_mel_spec = np.log10(mel_spec + 1e-6)
             
-            # Normalisation à la volée du score de corrélation
-            # (Approximation du coefficient de corrélation de Pearson en 2D)
-            norm_factor = (np.linalg.norm(lot_spec) * np.linalg.norm(template_spec)) + 1e-9
-            max_score = float(np.max(corr_2d) / (norm_factor * 0.01)) # Facteur d'échelle empirique pour l'espace de Mel
+            # Application de la standardisation intra-bloc pour stabiliser le fond homogène
+            log_mel_spec -= np.mean(log_mel_spec)
+            std_dev = np.std(log_mel_spec)
+            if std_dev > 1e-6:
+                log_mel_spec /= std_dev
 
-            print(f"[{time.strftime('%H:%M:%S')}] Analyse Lot 35s | RMS={raw_rms:.5f} | Score_Max_2D={max_score:.3f}")
+            # 2. Corrélation croisée 2D sur matrice stabilisée
+            corr_2d = correlate2d(log_mel_spec, template_spec, mode='valid')
+            
+            # Facteur d'ajustement adaptatif contre l'effet de dilution temporelle
+            norm_factor = np.sqrt(np.sum(log_mel_spec ** 2) * template_energy) + 1e-9
+            max_score = float(np.max(corr_2d) / (norm_factor * 0.005))
 
-            # 3. Seuil de décision
-            if max_score >= STRICT_2D_CORR_THRESHOLD:
+            # 3. Détermination des états textuels
+            is_silent = raw_rms < NOISE_GATE_RMS
+            gate_status = "SILENCIEUX (Sous Gate)" if is_silent else "ACTIF (Au-dessus Gate)"
+            match_status = "MATCH !!" if (max_score >= STRICT_2D_CORR_THRESHOLD and not is_silent) else "Aucun Match"
+
+            # 4. Affichage régulier du tableau de bord
+            print(f"[{current_time}] RAPPORT DE MONITORING :")
+            print(f"    * Volume RMS Actuel : {raw_rms:.5f}  |  [Seuil Gate  : {NOISE_GATE_RMS:.5f}]  -> {gate_status}")
+            print(f"    * Score Match 2D   : {max_score:.3f}  |  [Seuil Match : {STRICT_2D_CORR_THRESHOLD:.2f}]  -> {match_status}")
+            print(f"{'─' * 70}")
+
+            # 5. Logique d'envoi d'alerte Discord
+            if max_score >= STRICT_2D_CORR_THRESHOLD and not is_silent:
                 now = time.time()
                 if (now - last_alert) > COOLDOWN_SECONDS:
                     last_alert = now
@@ -249,13 +265,12 @@ def main() -> None:
     t = threading.Thread(target=detector_loop, daemon=True)
     t.start()
 
-    # Block size de capture à 8192 pour être ultra léger sur l'I/O CPU
     try:
         with sd.InputStream(device=args.device, channels=2, samplerate=sr, blocksize=8192, dtype="float32", callback=callback):
             while True:
                 time.sleep(0.5)
     except KeyboardInterrupt:
-        print("\n[*] Arrêt du système de détection.")
+        print("\n[*] Arrêt du système.")
 
 if __name__ == "__main__":
     main()
