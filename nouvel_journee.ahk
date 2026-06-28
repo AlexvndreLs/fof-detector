@@ -2,7 +2,7 @@
 #SingleInstance Force
 
 ; ─── CONFIGURATION DE CHEMINS ─────────────────────────────────────────────────
-DETECTOR_PATH := "C:\Users\Alexandre\fof_detector\test.py"
+DETECTOR_PATH := "C:\Users\Alexandre\fof_detector\v8.4_compatible.py"
 PYTHON_PATH   := "C:\miniconda\envs\sot\python.exe"
 FLAG_FILE     := "C:\Users\Alexandre\fof_detector\fort_detected.txt"
 BOAT_TOGGLE   := false
