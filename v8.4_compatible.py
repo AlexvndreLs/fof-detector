@@ -242,7 +242,7 @@ class AdvancedFusionMatcher:
                 return 0.0, max_csv_score, s_temp, psd_variance
 
             # Protection chirurgicale contre les faux positifs d'écrans de chargement complexes.
-            if s_csv <= 0.092 and (0.30 <= psd_variance <= 0.45): [cite: 7]
+            if s_csv <= 0.092 and (0.30 <= psd_variance <= 0.45):  #[cite: 7]
                 return 0.0, max_csv_score, s_temp, psd_variance
             
             return 100.0, max_csv_score, s_temp, psd_variance
