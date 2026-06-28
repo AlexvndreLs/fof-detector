@@ -10,23 +10,29 @@ BOAT_TOGGLE   := false
 ; ─── CONFIGURATION MODE TEST (DIAGNOSTIC) ─────────────────────────────────────
 TEST_MODE     := false   ; true  = Mode test AHK uniquement (aucun lancement de Python, attente courte en jeu)
                         ; false = Mode réel (lance Python en tâche de fond, arrête dès qu'un fort est détecté)
+SHOW_PYTHON   := true    ; true  = Affiche la console Python pendant T_IN_GAME
+                        ; false = Python tourne caché en permanence
 
 ; ─── TIMINGS INTER-SAISIES (ms) ────────────────────────────────────────────────
-T_CURSOR         := 500    ; entre Q Q E
-T_MENU_NAV       := 1000   ; entre Enter jouer/aventure/haute mer
-T_AFTER_HAUTEMER := 4000   ; attente chargement avant sélection guilde
-T_ARROW          := 500    ; entre flèches guilde
-T_AFTER_GUILDE   := 1000   ; après Enter guilde
-T_BOAT_ARROW     := 500    ; entre flèches choix bateau
-T_BEFORE_DEPART  := 1000   ; avant confirmer départ
-T_AFTER_DEPART   := 1000   ; après confirmer départ
-T_GUILDE_OUVERTE := 500    ; entre Down et Enter mode guilde ouvert
-T_AFTER_CONFIRM  := 1000   ; après confirmation finale
-T_IN_GAME        := 25     ; secondes d'écoute en jeu (en mode réel)
-T_QUIT_ARROW     := 500    ; entre flèches menu quitter
-T_TITLE_SCREEN   := 15     ; secondes attente écran titre
-T_AFTER_ENTER_TITLE := 10  ; secondes attente après Enter sur écran titre
-T_POPUP_ESC      := 500    ; entre les deux Escape popup
+T_CURSOR               := 500    ; entre Q Q E
+T_MENU_NAV             := 1000   ; entre Enter jouer/aventure/haute mer
+T_HAUTEMER_BEFORE_PY   := 2000   ; attente avant lancement Python (dans T_AFTER_HAUTEMER)
+T_HAUTEMER_AFTER_PY    := 2000  ; attente après lancement Python (reste de T_AFTER_HAUTEMER)
+T_ARROW                := 500    ; entre flèches guilde
+T_AFTER_GUILDE         := 1000   ; après Enter guilde
+T_BOAT_ARROW           := 500    ; entre flèches choix bateau
+T_BEFORE_DEPART        := 1000   ; avant confirmer départ
+T_AFTER_DEPART         := 1000   ; après confirmer départ
+T_GUILDE_OUVERTE       := 500    ; entre Down et Enter mode guilde ouvert
+T_AFTER_CONFIRM        := 1000   ; après confirmation finale
+T_BEFORE_ENTER_DEPART  := 2500   ; attente avant Enter final de lancement matchmaking
+T_IN_GAME              := 60     ; secondes d'écoute en jeu (en mode réel)
+T_QUIT_ARROW           := 500    ; entre flèches menu quitter
+T_TITLE_SCREEN         := 15     ; secondes attente écran titre
+T_AFTER_ENTER_TITLE    := 10     ; secondes attente après Enter sur écran titre
+T_POPUP_ESC            := 500    ; entre les deux Escape popup
+T_STOP_DELAY           := 5000   ; attente avant taskkill (laisse Python envoyer Discord)
+T_PYTHON_HIDE          := 10000  ; délai avant masquage fenêtre Python après T_IN_GAME (ms)
 
 ; ─── RACCOURCIS CLAVIER ────────────────────────────────────────────────────────
 ^+f:: {
@@ -47,7 +53,7 @@ StopLoop() {
     global running, detector_pid
     running := false
     
-    Sleep(1000)
+    Sleep(T_STOP_DELAY)
     try {
         Run("taskkill /F /IM python.exe", , "Hide")
     }
@@ -108,7 +114,7 @@ StartDetector() {
         try FileDelete(FLAG_FILE)
     }
         
-    cmd := PYTHON_PATH . " " . DETECTOR_PATH . " --listen 45"
+    cmd := "cmd.exe /k " . PYTHON_PATH . " " . DETECTOR_PATH
     Run(cmd, , "Hide", &detector_pid)
 }
 
@@ -126,11 +132,11 @@ WaitChecked(ms) {
 }
 
 RunSession() {
-    global running, BOAT_TOGGLE, detector_pid, TEST_MODE
-    global T_CURSOR, T_MENU_NAV, T_AFTER_HAUTEMER, T_ARROW, T_AFTER_GUILDE
+    global running, BOAT_TOGGLE, detector_pid, TEST_MODE, SHOW_PYTHON
+    global T_CURSOR, T_MENU_NAV, T_HAUTEMER_BEFORE_PY, T_HAUTEMER_AFTER_PY, T_ARROW, T_AFTER_GUILDE
     global T_BOAT_ARROW, T_BEFORE_DEPART, T_AFTER_DEPART, T_GUILDE_OUVERTE
-    global T_AFTER_CONFIRM, T_IN_GAME, T_QUIT_ARROW, T_TITLE_SCREEN
-    global T_AFTER_ENTER_TITLE, T_POPUP_ESC
+    global T_AFTER_CONFIRM, T_BEFORE_ENTER_DEPART, T_IN_GAME, T_QUIT_ARROW, T_TITLE_SCREEN
+    global T_AFTER_ENTER_TITLE, T_POPUP_ESC, T_PYTHON_HIDE
 
     ; ── Alignement curseur principal ──────────────────────────────────────
     Send("q")
@@ -139,16 +145,33 @@ RunSession() {
     WaitChecked(T_CURSOR)
     Send("e")
     WaitChecked(T_CURSOR)
+    Send("{Down}")
+    WaitChecked(T_CURSOR)
 
     ; ── Navigation de session (Jouer → Aventure → Haute Mer) ──────────────
     Send("{Enter}")
     if !WaitChecked(T_MENU_NAV)
         return
+    Send("{Left}")
+    WaitChecked(T_MENU_NAV)
     Send("{Enter}")
     if !WaitChecked(T_MENU_NAV)
         return
+    Send("{Left}")
+    WaitChecked(T_MENU_NAV)
     Send("{Enter}")
-    if !WaitChecked(T_AFTER_HAUTEMER)
+    if !WaitChecked(T_HAUTEMER_BEFORE_PY)
+        return
+
+    ; ── Lancement de l'écoute du signal (Uniquement si hors Mode Test) ───
+    ; Lancé ici : 2s dans T_AFTER_HAUTEMER, soit ~15s avant T_IN_GAME
+    if !TEST_MODE {
+        StartDetector()
+    } else {
+        ToolTip("🧪 TEST MACRO : Pas de Python. Simulation en jeu (10s)...")
+    }
+
+    if !WaitChecked(T_HAUTEMER_AFTER_PY)
         return
 
     ; ── Sélection de la Guilde ────────────────────────────────────────────
@@ -202,20 +225,19 @@ RunSession() {
         return
 
     ; ── Validation finale avant écran de chargement ──────────────────────
-    if !WaitChecked(2500)
+    if !WaitChecked(T_BEFORE_ENTER_DEPART)
         return
     Send("{Enter}")
     if !WaitChecked(T_AFTER_CONFIRM)
         return
 
-    ; ── Lancement de l'écoute du signal (Uniquement si hors Mode Test) ───
-    if !TEST_MODE {
-        StartDetector()
-    } else {
-        ToolTip("🧪 TEST MACRO : Pas de Python. Simulation en jeu (10s)...")
+    ; ── Attente de l'arrivée de la session de jeu ────────────────────────
+    if !TEST_MODE && SHOW_PYTHON {
+        WinWait("ahk_pid " . detector_pid, , 30)
+        WinShow("ahk_pid " . detector_pid)
+        WinActivate("ahk_pid " . detector_pid)
     }
 
-    ; ── Attente de l'arrivée de la session de jeu ────────────────────────
     wait_time := TEST_MODE ? 10 : T_IN_GAME
     loop wait_time {
         if !running
@@ -225,45 +247,19 @@ RunSession() {
         Sleep(1000)
     }
 
+    ; Cacher la console Python et remettre SoT au premier plan
+    if !TEST_MODE && SHOW_PYTHON {
+        WaitChecked(T_PYTHON_HIDE)
+        WinHide("ahk_pid " . detector_pid)
+    }
+
     if TEST_MODE {
         ToolTip("🏴‍☠️ Boucle de serveurs lancée | Ctrl+Shift+Q pour quitter")
     }
 
-    ; ── NETTOYAGE RADICAL DE PYTHON (PLUS D'ÉCOUTE APPRÈS LA TAVERNE) ─────
-    if !TEST_MODE {
-        try {
-            Run("taskkill /F /IM python.exe", , "Hide")
-        }
-        detector_pid := 0
-    }
-
-    ; ── MOUVEMENTS PHYSIQUES DE SORTIE DE SESSION ─────────────────────────
-    if !WaitChecked(500)
-        return
-
-    ; 1. Avancer pendant 300ms
-    Send("{z Down}")
-    Sleep(300)
-    Send("{z Up}")
-    if !WaitChecked(200)
-        return
-
-    ; 2. Reculer pendant 300ms
-    Send("{s Down}")
-    Sleep(300)
-    Send("{s Up}")
-    if !WaitChecked(200)
-        return
-
-    ; 3. Tourner la caméra à droite de manière fluide (Simule la souris)
-    Loop 20 {
-        DllCall("mouse_event", "UInt", 0x0001, "Int", 30, "Int", 0, "UInt", 0, "UInt", 0)
-        Sleep(15)
-    }
-    if !WaitChecked(500)
-        return
-
     ; ── OUVERTURE DU MENU DE PAUSE STANDARD ───────────────────────────────
+    WinActivate("ahk_exe SoTGame.exe")
+    WinWaitActive("ahk_exe SoTGame.exe", , 3)
     Send("{Escape}")
 
     if !WaitChecked(3000)
@@ -284,6 +280,14 @@ RunSession() {
         
     Send("{Enter}")
 
+    ; ── NETTOYAGE RADICAL DE PYTHON (PLUS D'ÉCOUTE APPRÈS LA TAVERNE) ─────
+    if !TEST_MODE {
+        try {
+            Run("taskkill /F /IM python.exe", , "Hide")
+        }
+        detector_pid := 0
+    }
+    
     ; ── Retour et attente de l'écran titre ───────────────────────────────
     loop T_TITLE_SCREEN {
         if !running
@@ -304,8 +308,5 @@ RunSession() {
     }
 
     ; ── Fermeture des popups Rare de début de jeu ──────────────────────────
-    Send("{Escape}")
-    WaitChecked(T_POPUP_ESC)
-    Send("{Escape}")
     WaitChecked(1000)
 }
